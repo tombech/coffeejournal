@@ -28,6 +28,7 @@ function ProductDetail() {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       const data = await response.json();
+      console.log('Product data received:', data);
       setProduct(data);
     } catch (err) {
       setError("Failed to fetch product details: " + err.message);
@@ -146,6 +147,8 @@ function ProductDetail() {
     return visualization;
   };
 
+  console.log('Render state:', { loading, error, product });
+  
   if (loading) return <p className="loading-message">Loading product details...</p>;
   if (error) return <p className="error-message">{error}</p>;
   if (!product) return <p>Product not found.</p>;
@@ -296,10 +299,10 @@ function ProductDetail() {
                   <span>{batch.amount_grams ? `${batch.amount_grams}g` : '-'}</span>
                   
                   <strong>Price:</strong>
-                  <span>{batch.price ? `${batch.price.toFixed(2)} kr` : '-'}</span>
+                  <span>{batch.price != null && !isNaN(batch.price) ? `${Number(batch.price).toFixed(2)} kr` : '-'}</span>
                   
                   <strong>Price per Cup:</strong>
-                  <span>{batch.price_per_cup ? `${batch.price_per_cup.toFixed(2)} kr` : '-'}</span>
+                  <span>{batch.price_per_cup != null && !isNaN(batch.price_per_cup) ? `${Number(batch.price_per_cup).toFixed(2)} kr` : '-'}</span>
                   
                   <strong>Seller:</strong>
                   <span>{batch.seller || '-'}</span>

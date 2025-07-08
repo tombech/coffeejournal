@@ -91,8 +91,12 @@ function BatchForm({ productId, initialData, onBatchSubmitted, onCancel }) {
   // Calculate price per cup in real-time
   const calculatePricePerCup = () => {
     if (formData.price && formData.amount_grams && formData.amount_grams > 0) {
-      const cupsPerBatch = formData.amount_grams / 18.0; // 18g per cup
-      return (formData.price / cupsPerBatch).toFixed(2);
+      const price = Number(formData.price);
+      const amount = Number(formData.amount_grams);
+      if (!isNaN(price) && !isNaN(amount) && amount > 0) {
+        const cupsPerBatch = amount / 18.0; // 18g per cup
+        return (price / cupsPerBatch).toFixed(2);
+      }
     }
     return null;
   };
