@@ -110,8 +110,17 @@ function BrewSessionForm({ product_batch_id = null, onSessionSubmitted, initialD
     setLoading(true);
     setError(null);
 
+    // Validate that batch is selected
+    if (!formData.product_batch_id && !isEditMode) {
+      setError('Please select a batch');
+      setLoading(false);
+      return;
+    }
+
     const method = isEditMode ? 'PUT' : 'POST';
-    const url = isEditMode ? `${API_BASE_URL}/brew_sessions/${initialData.id}` : `${API_BASE_URL}/brew_sessions`;
+    const url = isEditMode 
+      ? `${API_BASE_URL}/brew_sessions/${initialData.id}` 
+      : `${API_BASE_URL}/batches/${formData.product_batch_id}/brew_sessions`;
 
     try {
       const response = await fetch(url, {
