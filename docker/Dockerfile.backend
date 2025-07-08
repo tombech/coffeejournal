@@ -21,19 +21,17 @@ RUN uv pip install --system -r uv.lock
 # Copy application source code
 COPY src/ ./src/
 
-# Copy Docker utilities
-COPY docker/init-db.py ./docker/
-
-# Create data directory for SQLite database
+# Create data directory for JSON storage
 RUN mkdir -p /app/data
 
 # Set environment variables
 ENV PYTHONPATH=/app/src
 ENV FLASK_APP=coffeejournal
 ENV FLASK_ENV=production
+ENV DATA_DIR=/app/data
 
 # Expose port
 EXPOSE 5000
 
 # Run the application
-CMD ["python", "-m", "src.coffeejournal.wsgi"]
+CMD ["python", "-m", "coffeejournal.wsgi"]
