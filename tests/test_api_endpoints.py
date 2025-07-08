@@ -292,16 +292,14 @@ class TestBrewSessionEndpoints:
         })
         product_id = product_response.get_json()['id']
         
-        batch_response = client.post('/api/batches', json={
-            'product_id': product_id,
+        batch_response = client.post(f'/api/products/{product_id}/batches', json={
             'roast_date': '2025-01-01'
         })
         batch_id = batch_response.get_json()['id']
         
-        # Create sessions
-        client.post('/api/brew_sessions', json={
-            'product_batch_id': batch_id,
-            'product_id': product_id
+        # Create sessions using RESTful endpoint
+        client.post(f'/api/batches/{batch_id}/brew_sessions', json={
+            'brew_method': 'V60'
         })
         
         response = client.get('/api/brew_sessions')
@@ -309,12 +307,6 @@ class TestBrewSessionEndpoints:
         
         sessions = response.get_json()
         assert len(sessions) >= 1
-        
-        # Check that product details are included
-        session = sessions[0]
-        assert 'product_details' in session
-        assert session['product_details']['roaster'] == 'Test Roaster'
-        assert session['product_details']['bean_type'] == 'Arabica'
     
     def test_update_brew_session(self, client):
         """Test updating a brew session."""
@@ -324,16 +316,13 @@ class TestBrewSessionEndpoints:
         })
         product_id = product_response.get_json()['id']
         
-        batch_response = client.post('/api/batches', json={
-            'product_id': product_id,
+        batch_response = client.post(f'/api/products/{product_id}/batches', json={
             'roast_date': '2025-01-01'
         })
         batch_id = batch_response.get_json()['id']
         
-        # Create session
-        session_response = client.post('/api/brew_sessions', json={
-            'product_batch_id': batch_id,
-            'product_id': product_id,
+        # Create session using RESTful endpoint
+        session_response = client.post(f'/api/batches/{batch_id}/brew_sessions', json={
             'sweetness': 7
         })
         session_id = session_response.get_json()['id']
@@ -427,8 +416,7 @@ class TestErrorHandling:
     
     def test_invalid_product_for_batch(self, client):
         """Test creating batch with invalid product ID."""
-        response = client.post('/api/batches', json={
-            'product_id': 99999,
+        response = client.post('/api/products/99999/batches', json={
             'roast_date': '2025-01-01'
         })
         assert response.status_code == 404

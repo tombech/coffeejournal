@@ -487,13 +487,12 @@ class TestCalculatedProperties:
         
         # Create batch via API
         batch_data = {
-            'product_id': product['id'],
             'roast_date': '2025-01-01',
             'amount_grams': 180.0,  # Exactly 10 cups worth
             'price': 10.0
         }
         
-        response = client.post('/api/batches', json=batch_data)
+        response = client.post(f'/api/products/{product["id"]}/batches', json=batch_data)
         assert response.status_code == 201
         
         batch = response.get_json()
@@ -518,13 +517,11 @@ class TestCalculatedProperties:
         
         # Create session via API
         session_data = {
-            'product_batch_id': batch['id'],
-            'product_id': product['id'],
             'amount_coffee_grams': 18.0,
             'amount_water_grams': 300.0
         }
         
-        response = client.post('/api/brew_sessions', json=session_data)
+        response = client.post(f'/api/batches/{batch["id"]}/brew_sessions', json=session_data)
         assert response.status_code == 201
         
         session = response.get_json()

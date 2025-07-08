@@ -390,7 +390,7 @@ def handle_batch_brew_sessions(batch_id):
                 session['product_name'] = f"{product.get('roaster', 'N/A')} - {product.get('bean_type', 'N/A')}"
             
             # Calculate brew ratio
-            session['brew_ratio'] = calculate_brew_ratio(session.get('coffee_amount'), session.get('water_amount'))
+            session['brew_ratio'] = calculate_brew_ratio(session.get('amount_coffee_grams'), session.get('amount_water_grams'))
         
         return jsonify(sessions)
     
@@ -400,20 +400,36 @@ def handle_batch_brew_sessions(batch_id):
         if not data:
             return jsonify({'error': 'No data provided'}), 400
         
+        # Get or create brew method and recipe
+        brew_method_repo = factory.get_brew_method_repository()
+        recipe_repo = factory.get_recipe_repository()
+        
+        brew_method = None
+        if data.get('brew_method'):
+            brew_method = brew_method_repo.get_or_create(data['brew_method'])
+        
+        recipe = None
+        if data.get('recipe'):
+            recipe = recipe_repo.get_or_create(data['recipe'])
+        
         # Extract fields from request
         session_data = {
+            'timestamp': data.get('timestamp', datetime.utcnow().isoformat()),
             'product_batch_id': batch_id,  # Use batch_id from URL
             'product_id': batch.get('product_id'),  # Get product_id from batch
-            'recipe_id': data.get('recipe_id'),
-            'brew_method_id': data.get('brew_method_id'),
-            'brew_date': data.get('brew_date'),
-            'coffee_amount': data.get('coffee_amount'),
-            'water_amount': data.get('water_amount'),
-            'grind_size': data.get('grind_size'),
-            'water_temperature': data.get('water_temperature'),
-            'brew_time': data.get('brew_time'),
-            'rating': data.get('rating'),
-            'tasting_notes': data.get('tasting_notes'),
+            'recipe_id': recipe['id'] if recipe else data.get('recipe_id'),
+            'brew_method_id': brew_method['id'] if brew_method else data.get('brew_method_id'),
+            'amount_coffee_grams': data.get('amount_coffee_grams'),
+            'amount_water_grams': data.get('amount_water_grams'),
+            'brew_temperature_c': data.get('brew_temperature_c'),
+            'bloom_time_seconds': data.get('bloom_time_seconds'),
+            'brew_time_seconds': data.get('brew_time_seconds'),
+            'sweetness': data.get('sweetness'),
+            'acidity': data.get('acidity'),
+            'bitterness': data.get('bitterness'),
+            'body': data.get('body'),
+            'aroma': data.get('aroma'),
+            'flavor_profile_match': data.get('flavor_profile_match'),
             'notes': data.get('notes')
         }
         
@@ -426,8 +442,21 @@ def handle_batch_brew_sessions(batch_id):
         if product:
             session['product_name'] = f"{product.get('roaster', 'N/A')} - {product.get('bean_type', 'N/A')}"
         
+        # Add brew method and recipe names
+        if brew_method:
+            session['brew_method'] = brew_method['name']
+        elif session.get('brew_method_id'):
+            method = brew_method_repo.find_by_id(session['brew_method_id'])
+            session['brew_method'] = method['name'] if method else None
+        
+        if recipe:
+            session['recipe'] = recipe['name']
+        elif session.get('recipe_id'):
+            rec = recipe_repo.find_by_id(session['recipe_id'])
+            session['recipe'] = rec['name'] if rec else None
+        
         # Calculate brew ratio
-        session['brew_ratio'] = calculate_brew_ratio(session.get('coffee_amount'), session.get('water_amount'))
+        session['brew_ratio'] = calculate_brew_ratio(session.get('amount_coffee_grams'), session.get('amount_water_grams'))
         
         return jsonify(session), 201
 
@@ -452,9 +481,17 @@ def get_all_brew_sessions():
         
         if product:
             session['product_name'] = f"{product.get('roaster', 'N/A')} - {product.get('bean_type', 'N/A')}"
+            session['product_details'] = {
+                'roaster': product.get('roaster'),
+                'bean_type': product.get('bean_type'),
+                'roast_date': batch.get('roast_date') if batch else None,
+                'roast_type': product.get('roast_type')
+            }
+        else:
+            session['product_details'] = {}
         
-        # Calculate brew ratio
-        session['brew_ratio'] = calculate_brew_ratio(session.get('coffee_amount'), session.get('water_amount'))
+        # Calculate brew ratio using consistent field names
+        session['brew_ratio'] = calculate_brew_ratio(session.get('amount_coffee_grams'), session.get('amount_water_grams'))
     
     return jsonify(sessions)
 

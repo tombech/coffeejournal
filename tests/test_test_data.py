@@ -188,13 +188,18 @@ class TestTestDataAPI:
         assert yirgacheffe['roaster'] == 'Blue Bottle Coffee'
     
     def test_get_batches_api(self, test_data_client):
-        """Test getting batches via API."""
-        response = test_data_client.get('/api/batches')
+        """Test getting batches via API using product endpoint."""
+        # First get a product
+        products_response = test_data_client.get('/api/products')
+        assert products_response.status_code == 200
+        products = products_response.get_json()
+        assert len(products) > 0
+        
+        product_id = products[0]['id']
+        response = test_data_client.get(f'/api/products/{product_id}/batches')
         assert response.status_code == 200
         
         batches = response.get_json()
-        assert len(batches) >= 6
-        
         # Check that price_per_cup is calculated
         for batch in batches:
             if batch.get('price') and batch.get('amount_grams'):
