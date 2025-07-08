@@ -98,20 +98,31 @@ function BrewSessionList() {
       <div style={{ marginBottom: '15px', display: 'flex', alignItems: 'center', gap: '10px' }}>
         <h2 style={{ margin: 0, marginRight: 'auto' }}>Brews</h2>
         
+        <button 
+          onClick={() => setShowNewForm(!showNewForm)}
+          style={{ padding: '6px 12px', border: 'none', background: 'none', cursor: 'pointer', fontSize: '16px' }}
+          title={showNewForm ? 'Cancel' : 'Add New Brew Session'}
+        >
+          {showNewForm ? '❌' : '➕'}
+        </button>
+        
         {editingSession && (
           <button 
             onClick={handleCancelEdit}
             style={{ padding: '6px 12px', border: 'none', background: 'none', cursor: 'pointer', fontSize: '16px' }}
             title="Cancel Edit"
           >
-            ❌
+            ❌ Edit
           </button>
         )}
       </div>
       
       {showNewForm && (
         <div className="new-brew-session-form" style={{ marginBottom: '20px', padding: '20px', backgroundColor: '#f8f9fa', borderRadius: '5px' }}>
-          <BrewSessionForm onSessionSubmitted={handleNewBrewSessionSubmitted} />
+          <BrewSessionForm 
+            onSessionSubmitted={handleNewBrewSessionSubmitted} 
+            onCancel={() => setShowNewForm(false)}
+          />
         </div>
       )}
       
