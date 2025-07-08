@@ -238,29 +238,9 @@ def delete_product(product_id):
 
 
 # --- Batch Endpoints ---
-@api.route('/batches', methods=['GET'])
-def get_all_batches():
-    """Get all batches."""
-    factory = get_repository_factory()
-    batches = factory.get_batch_repository().find_all()
-    
-    # Enrich with product information and calculate price per cup
-    product_repo = factory.get_product_repository()
-    for batch in batches:
-        product = product_repo.find_by_id(batch['product_id'])
-        if product:
-            batch['product_name'] = f"{product.get('roaster', 'N/A')} - {product.get('bean_type', 'N/A')}"
-        else:
-            batch['product_name'] = "N/A Product"
-        
-        batch['price_per_cup'] = calculate_price_per_cup(batch.get('price'), batch.get('amount_grams'))
-    
-    return jsonify(batches)
-
-
-@api.route('/products/<int:product_id>/batches', methods=['GET'])
-def get_product_batches(product_id):
-    """Get all batches for a specific product."""
+@api.route('/products/<int:product_id>/batches', methods=['GET', 'POST'])
+def handle_product_batches(product_id):
+    """Get all batches for a specific product or create a new batch."""
     factory = get_repository_factory()
     
     # Check if product exists
@@ -269,14 +249,41 @@ def get_product_batches(product_id):
     if not product:
         return jsonify({'error': 'Product not found'}), 404
     
-    batches = factory.get_batch_repository().find_by_product(product_id)
+    if request.method == 'GET':
+        batches = factory.get_batch_repository().find_by_product(product_id)
+        
+        # Enrich with product information and calculate price per cup
+        for batch in batches:
+            batch['product_name'] = f"{product.get('roaster', 'N/A')} - {product.get('bean_type', 'N/A')}"
+            batch['price_per_cup'] = calculate_price_per_cup(batch.get('price'), batch.get('amount_grams'))
+        
+        return jsonify(batches)
     
-    # Enrich with product information and calculate price per cup
-    for batch in batches:
+    elif request.method == 'POST':
+        """Create a new batch for the specified product."""
+        data = request.get_json()
+        if not data:
+            return jsonify({'error': 'No data provided'}), 400
+        
+        # Extract fields from request
+        batch_data = {
+            'product_id': product_id,  # Use product_id from URL
+            'roast_date': data.get('roast_date'),
+            'purchase_date': data.get('purchase_date'),
+            'amount_grams': data.get('amount_grams'),
+            'price': data.get('price'),
+            'seller': data.get('seller'),
+            'notes': data.get('notes')
+        }
+        
+        batch_repo = factory.get_batch_repository()
+        batch = batch_repo.create(batch_data)
+        
+        # Enrich with product information and calculate price per cup
         batch['product_name'] = f"{product.get('roaster', 'N/A')} - {product.get('bean_type', 'N/A')}"
         batch['price_per_cup'] = calculate_price_per_cup(batch.get('price'), batch.get('amount_grams'))
-    
-    return jsonify(batches)
+        
+        return jsonify(batch), 201
 
 
 @api.route('/batches/<int:batch_id>', methods=['GET'])
@@ -299,40 +306,6 @@ def get_batch(batch_id):
     
     return jsonify(batch)
 
-
-@api.route('/batches', methods=['POST'])
-def create_batch():
-    """Create a new batch."""
-    factory = get_repository_factory()
-    data = request.json
-    
-    # Validate product exists
-    product_id = data.get('product_id')
-    if not product_id:
-        return jsonify({'error': 'Product ID is required'}), 400
-    
-    product = factory.get_product_repository().find_by_id(product_id)
-    if not product:
-        return jsonify({'error': 'Product not found'}), 404
-    
-    # Create batch
-    batch_data = {
-        'product_id': product_id,
-        'roast_date': data.get('roast_date'),
-        'purchase_date': data.get('purchase_date'),
-        'amount_grams': data.get('amount_grams'),
-        'price': data.get('price'),
-        'seller': data.get('seller'),
-        'notes': data.get('notes')
-    }
-    
-    batch = factory.get_batch_repository().create(batch_data)
-    
-    # Add enriched data
-    batch['product_name'] = f"{product.get('roaster', 'N/A')} - {product.get('bean_type', 'N/A')}"
-    batch['price_per_cup'] = calculate_price_per_cup(batch.get('price'), batch.get('amount_grams'))
-    
-    return jsonify(batch), 201
 
 
 @api.route('/batches/<int:batch_id>', methods=['PUT'])
@@ -393,48 +366,95 @@ def delete_batch(batch_id):
     return '', 204
 
 
+# --- Nested Brew Session Endpoints ---
+@api.route('/batches/<int:batch_id>/brew_sessions', methods=['GET', 'POST'])
+def handle_batch_brew_sessions(batch_id):
+    """Get all brew sessions for a batch or create a new brew session."""
+    factory = get_repository_factory()
+    
+    # Check if batch exists
+    batch_repo = factory.get_batch_repository()
+    batch = batch_repo.find_by_id(batch_id)
+    if not batch:
+        return jsonify({'error': 'Batch not found'}), 404
+    
+    if request.method == 'GET':
+        sessions = factory.get_brew_session_repository().find_by_batch(batch_id)
+        
+        # Enrich with product and batch information
+        for session in sessions:
+            # Get product info for enrichment
+            product_repo = factory.get_product_repository()
+            product = product_repo.find_by_id(batch.get('product_id'))
+            if product:
+                session['product_name'] = f"{product.get('roaster', 'N/A')} - {product.get('bean_type', 'N/A')}"
+            
+            # Calculate brew ratio
+            session['brew_ratio'] = calculate_brew_ratio(session.get('coffee_amount'), session.get('water_amount'))
+        
+        return jsonify(sessions)
+    
+    elif request.method == 'POST':
+        """Create a new brew session for the specified batch."""
+        data = request.get_json()
+        if not data:
+            return jsonify({'error': 'No data provided'}), 400
+        
+        # Extract fields from request
+        session_data = {
+            'product_batch_id': batch_id,  # Use batch_id from URL
+            'product_id': batch.get('product_id'),  # Get product_id from batch
+            'recipe_id': data.get('recipe_id'),
+            'brew_method_id': data.get('brew_method_id'),
+            'brew_date': data.get('brew_date'),
+            'coffee_amount': data.get('coffee_amount'),
+            'water_amount': data.get('water_amount'),
+            'grind_size': data.get('grind_size'),
+            'water_temperature': data.get('water_temperature'),
+            'brew_time': data.get('brew_time'),
+            'rating': data.get('rating'),
+            'tasting_notes': data.get('tasting_notes'),
+            'notes': data.get('notes')
+        }
+        
+        session_repo = factory.get_brew_session_repository()
+        session = session_repo.create(session_data)
+        
+        # Enrich with product information
+        product_repo = factory.get_product_repository()
+        product = product_repo.find_by_id(batch.get('product_id'))
+        if product:
+            session['product_name'] = f"{product.get('roaster', 'N/A')} - {product.get('bean_type', 'N/A')}"
+        
+        # Calculate brew ratio
+        session['brew_ratio'] = calculate_brew_ratio(session.get('coffee_amount'), session.get('water_amount'))
+        
+        return jsonify(session), 201
+
+
 # --- Brew Session Endpoints ---
+
+# Convenience endpoint to get all brew sessions (for listing views)
 @api.route('/brew_sessions', methods=['GET'])
-def get_brew_sessions():
-    """Get all brew sessions."""
+def get_all_brew_sessions():
+    """Get all brew sessions from all batches."""
     factory = get_repository_factory()
     sessions = factory.get_brew_session_repository().find_all()
     
-    # Enrich with product and batch information
+    # Enrich with product information and calculate brew ratio
     product_repo = factory.get_product_repository()
     batch_repo = factory.get_batch_repository()
-    brew_method_repo = factory.get_brew_method_repository()
-    recipe_repo = factory.get_recipe_repository()
     
     for session in sessions:
-        # Calculate brew ratio
-        session['brew_ratio'] = calculate_brew_ratio(
-            session.get('amount_coffee_grams'),
-            session.get('amount_water_grams')
-        )
-        
-        # Get product details
-        product = product_repo.find_by_id(session['product_id'])
-        batch = batch_repo.find_by_id(session['product_batch_id'])
+        # Get product and batch info for enrichment
+        product = product_repo.find_by_id(session.get('product_id'))
+        batch = batch_repo.find_by_id(session.get('product_batch_id'))
         
         if product:
-            session['product_details'] = {
-                'roaster': product.get('roaster'),
-                'bean_type': product.get('bean_type'),
-                'roast_date': batch.get('roast_date') if batch else None,
-                'roast_type': product.get('roast_type')
-            }
-        else:
-            session['product_details'] = {}
+            session['product_name'] = f"{product.get('roaster', 'N/A')} - {product.get('bean_type', 'N/A')}"
         
-        # Add brew method and recipe names
-        if session.get('brew_method_id'):
-            brew_method = brew_method_repo.find_by_id(session['brew_method_id'])
-            session['brew_method'] = brew_method['name'] if brew_method else None
-        
-        if session.get('recipe_id'):
-            recipe = recipe_repo.find_by_id(session['recipe_id'])
-            session['recipe'] = recipe['name'] if recipe else None
+        # Calculate brew ratio
+        session['brew_ratio'] = calculate_brew_ratio(session.get('coffee_amount'), session.get('water_amount'))
     
     return jsonify(sessions)
 
@@ -486,78 +506,6 @@ def get_brew_session(session_id):
     return jsonify(session)
 
 
-@api.route('/brew_sessions', methods=['POST'])
-def create_brew_session():
-    """Create a new brew session."""
-    factory = get_repository_factory()
-    data = request.json
-    
-    # Validate required fields
-    product_batch_id = data.get('product_batch_id')
-    product_id = data.get('product_id')
-    
-    if not product_batch_id or not product_id:
-        return jsonify({'error': 'Product batch ID and product ID are required'}), 400
-    
-    # Validate product and batch exist
-    product = factory.get_product_repository().find_by_id(product_id)
-    if not product:
-        return jsonify({'error': 'Product not found'}), 404
-    
-    batch = factory.get_batch_repository().find_by_id(product_batch_id)
-    if not batch:
-        return jsonify({'error': 'Batch not found'}), 404
-    
-    # Get or create brew method and recipe
-    brew_method_repo = factory.get_brew_method_repository()
-    recipe_repo = factory.get_recipe_repository()
-    
-    brew_method = None
-    if data.get('brew_method'):
-        brew_method = brew_method_repo.get_or_create(data['brew_method'])
-    
-    recipe = None
-    if data.get('recipe'):
-        recipe = recipe_repo.get_or_create(data['recipe'])
-    
-    # Create brew session
-    session_data = {
-        'timestamp': data.get('timestamp', datetime.utcnow().isoformat()),
-        'product_batch_id': product_batch_id,
-        'product_id': product_id,
-        'brew_method_id': brew_method['id'] if brew_method else None,
-        'recipe_id': recipe['id'] if recipe else None,
-        'amount_coffee_grams': data.get('amount_coffee_grams'),
-        'amount_water_grams': data.get('amount_water_grams'),
-        'brew_temperature_c': data.get('brew_temperature_c'),
-        'bloom_time_seconds': data.get('bloom_time_seconds'),
-        'brew_time_seconds': data.get('brew_time_seconds'),
-        'sweetness': data.get('sweetness'),
-        'acidity': data.get('acidity'),
-        'bitterness': data.get('bitterness'),
-        'body': data.get('body'),
-        'aroma': data.get('aroma'),
-        'flavor_profile_match': data.get('flavor_profile_match'),
-        'notes': data.get('notes')
-    }
-    
-    session = factory.get_brew_session_repository().create(session_data)
-    
-    # Add enriched data
-    session['brew_ratio'] = calculate_brew_ratio(
-        session.get('amount_coffee_grams'),
-        session.get('amount_water_grams')
-    )
-    session['brew_method'] = brew_method['name'] if brew_method else None
-    session['recipe'] = recipe['name'] if recipe else None
-    session['product_details'] = {
-        'roaster': product.get('roaster'),
-        'bean_type': product.get('bean_type'),
-        'roast_date': batch.get('roast_date'),
-        'roast_type': product.get('roast_type')
-    }
-    
-    return jsonify(session), 201
 
 
 @api.route('/brew_sessions/<int:session_id>', methods=['PUT'])
