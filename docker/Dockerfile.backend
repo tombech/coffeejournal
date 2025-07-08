@@ -15,7 +15,7 @@ COPY --from=ghcr.io/astral-sh/uv:latest /uv /bin/uv
 ENV UV_COMPILE_BYTECODE=1 \
     UV_LINK_MODE=copy \
     UV_PYTHON_DOWNLOADS=never \
-    UV_PROJECT_ENVIRONMENT=/app
+    UV_PROJECT_ENVIRONMENT=/app/.venv
 
 WORKDIR /app
 
@@ -26,8 +26,8 @@ COPY pyproject.toml uv.lock ./
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --frozen --no-install-project
 
-# Copy application source code
-COPY src/ ./src/
+# Copy the entire source tree to match pyproject.toml structure
+COPY . /app
 
 # Install the project
 RUN --mount=type=cache,target=/root/.cache/uv \
