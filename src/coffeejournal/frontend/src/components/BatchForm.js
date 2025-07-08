@@ -49,13 +49,18 @@ function BatchForm({ productId, initialData, onBatchSubmitted, onCancel }) {
     const method = isEditMode ? 'PUT' : 'POST';
     const url = isEditMode 
       ? `${API_BASE_URL}/batches/${initialData.id}` 
-      : `${API_BASE_URL}/products/${productId}/batches`;
+      : `${API_BASE_URL}/batches`;
+
+    // Prepare request data - include product_id for new batches
+    const requestData = isEditMode 
+      ? formData 
+      : { ...formData, product_id: parseInt(productId) };
 
     try {
       const response = await fetch(url, {
         method: method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(requestData),
       });
 
       if (!response.ok) {
