@@ -159,7 +159,7 @@ cython_debug/
 .idea/
 
 # uv
-uv.lock
+# uv.lock - keeping this in version control for reproducible builds
 
 # Database files
 *.db
