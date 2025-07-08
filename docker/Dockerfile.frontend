@@ -10,8 +10,8 @@ COPY src/coffeejournal/frontend/package*.json ./
 # Install dependencies
 RUN npm ci --only=production
 
-# Set API URL for Docker networking
-ENV REACT_APP_API_URL=http://backend:5000/api
+# Set API URL to use nginx proxy
+ENV REACT_APP_API_URL=/api
 
 # Copy source code
 COPY src/coffeejournal/frontend/ ./
