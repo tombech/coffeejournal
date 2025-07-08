@@ -8,10 +8,13 @@ api = Blueprint('api', __name__, url_prefix='/api')
 
 def calculate_brew_ratio(coffee_grams, water_grams):
     """Calculate brew ratio."""
-    if coffee_grams and water_grams and coffee_grams > 0:
+    if coffee_grams and water_grams:
         try:
-            ratio = water_grams / coffee_grams
-            return f"1:{ratio:.1f}"
+            coffee_float = float(coffee_grams)
+            water_float = float(water_grams)
+            if coffee_float > 0:
+                ratio = water_float / coffee_float
+                return f"1:{ratio:.1f}"
         except (ValueError, TypeError, ZeroDivisionError):
             return None
     return None
@@ -19,10 +22,13 @@ def calculate_brew_ratio(coffee_grams, water_grams):
 
 def calculate_price_per_cup(price, amount_grams):
     """Calculate price per cup based on 18g coffee per cup."""
-    if price is not None and amount_grams is not None and amount_grams > 0:
+    if price is not None and amount_grams is not None:
         try:
-            cups_per_batch = float(amount_grams) / 18.0
-            return round(float(price) / cups_per_batch, 2)
+            price_float = float(price)
+            amount_float = float(amount_grams)
+            if amount_float > 0:
+                cups_per_batch = amount_float / 18.0
+                return round(price_float / cups_per_batch, 2)
         except (ValueError, TypeError, ZeroDivisionError):
             return None
     return None

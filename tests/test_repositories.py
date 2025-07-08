@@ -527,3 +527,58 @@ class TestCalculatedProperties:
         session = response.get_json()
         # 300/18 = 16.67, should be "1:16.7"
         assert session['brew_ratio'] == '1:16.7'
+    
+    def test_price_per_cup_with_string_inputs(self, client, repo_factory):
+        """Test price per cup calculation with string inputs from forms."""
+        # Create test data
+        roaster_repo = repo_factory.get_roaster_repository()
+        product_repo = repo_factory.get_product_repository()
+        
+        roaster = roaster_repo.create({'name': 'Test Roaster'})
+        product = product_repo.create({
+            'roaster': 'Test Roaster',
+            'roaster_id': roaster['id']
+        })
+        
+        # Create batch via API with string inputs (like from HTML form)
+        batch_data = {
+            'roast_date': '2025-01-01',
+            'amount_grams': '180.0',  # String input
+            'price': '10.0'           # String input
+        }
+        
+        response = client.post(f'/api/products/{product["id"]}/batches', json=batch_data)
+        assert response.status_code == 201
+        
+        batch = response.get_json()
+        assert batch['price_per_cup'] == 1.0  # Should handle string conversion
+    
+    def test_brew_ratio_with_string_inputs(self, client, repo_factory):
+        """Test brew ratio calculation with string inputs from forms."""
+        # Create test data
+        roaster_repo = repo_factory.get_roaster_repository()
+        product_repo = repo_factory.get_product_repository()
+        batch_repo = repo_factory.get_batch_repository()
+        
+        roaster = roaster_repo.create({'name': 'Test Roaster'})
+        product = product_repo.create({
+            'roaster': 'Test Roaster',
+            'roaster_id': roaster['id']
+        })
+        batch = batch_repo.create({
+            'product_id': product['id'],
+            'roast_date': date(2025, 1, 1).isoformat()
+        })
+        
+        # Create session via API with string inputs (like from HTML form)
+        session_data = {
+            'amount_coffee_grams': '18.0',  # String input
+            'amount_water_grams': '300.0'   # String input
+        }
+        
+        response = client.post(f'/api/batches/{batch["id"]}/brew_sessions', json=session_data)
+        assert response.status_code == 201
+        
+        session = response.get_json()
+        # 300/18 = 16.67, should be "1:16.7" - should handle string conversion
+        assert session['brew_ratio'] == '1:16.7'
