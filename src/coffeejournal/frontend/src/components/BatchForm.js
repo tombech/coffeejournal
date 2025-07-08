@@ -49,12 +49,11 @@ function BatchForm({ productId, initialData, onBatchSubmitted, onCancel }) {
     const method = isEditMode ? 'PUT' : 'POST';
     const url = isEditMode 
       ? `${API_BASE_URL}/batches/${initialData.id}` 
-      : `${API_BASE_URL}/batches`;
+      : `${API_BASE_URL}/products/${productId}/batches`;
 
-    // Prepare request data - include product_id for new batches
-    const requestData = isEditMode 
-      ? formData 
-      : { ...formData, product_id: parseInt(productId) };
+    // For edit mode, no need to modify formData
+    // For create mode, product_id comes from URL, not request body
+    const requestData = formData;
 
     try {
       const response = await fetch(url, {

@@ -152,16 +152,15 @@ class TestBatchEndpoints:
         })
         product_id = product_response.get_json()['id']
         
-        # Create a batch
+        # Create a batch using RESTful endpoint
         batch_data = {
-            'product_id': product_id,
             'roast_date': '2025-01-01',
             'amount_grams': 250.0,
             'price': 15.99,
             'seller': 'Local Coffee Shop'
         }
         
-        response = client.post('/api/batches', json=batch_data)
+        response = client.post(f'/api/products/{product_id}/batches', json=batch_data)
         assert response.status_code == 201
         
         batch = response.get_json()
@@ -179,13 +178,11 @@ class TestBatchEndpoints:
         })
         product_id = product_response.get_json()['id']
         
-        # Create batches
-        client.post('/api/batches', json={
-            'product_id': product_id,
+        # Create batches using RESTful endpoints
+        client.post(f'/api/products/{product_id}/batches', json={
             'roast_date': '2025-01-01'
         })
-        client.post('/api/batches', json={
-            'product_id': product_id,
+        client.post(f'/api/products/{product_id}/batches', json={
             'roast_date': '2025-01-02'
         })
         
@@ -205,8 +202,7 @@ class TestBatchEndpoints:
         })
         product_id = product_response.get_json()['id']
         
-        batch_response = client.post('/api/batches', json={
-            'product_id': product_id,
+        batch_response = client.post(f'/api/products/{product_id}/batches', json={
             'roast_date': '2025-01-01',
             'price': 15.99
         })
@@ -237,9 +233,8 @@ class TestBatchEndpoints:
         })
         product_id = product_response.get_json()['id']
         
-        # Create batch
-        batch_response = client.post('/api/batches', json={
-            'product_id': product_id,
+        # Create batch using RESTful endpoint
+        batch_response = client.post(f'/api/products/{product_id}/batches', json={
             'roast_date': '2025-01-01'
         })
         batch_id = batch_response.get_json()['id']
@@ -263,16 +258,13 @@ class TestBrewSessionEndpoints:
         })
         product_id = product_response.get_json()['id']
         
-        batch_response = client.post('/api/batches', json={
-            'product_id': product_id,
+        batch_response = client.post(f'/api/products/{product_id}/batches', json={
             'roast_date': '2025-01-01'
         })
         batch_id = batch_response.get_json()['id']
         
-        # Create brew session
+        # Create brew session using RESTful endpoint
         session_data = {
-            'product_batch_id': batch_id,
-            'product_id': product_id,
             'brew_method': 'V60',
             'amount_coffee_grams': 18.0,
             'amount_water_grams': 300.0,
@@ -281,7 +273,7 @@ class TestBrewSessionEndpoints:
             'notes': 'Great cup!'
         }
         
-        response = client.post('/api/brew_sessions', json=session_data)
+        response = client.post(f'/api/batches/{batch_id}/brew_sessions', json=session_data)
         assert response.status_code == 201
         
         session = response.get_json()
