@@ -1,6 +1,5 @@
 [
   {
-    "id": 1,
     "roaster": "Blue Bottle Coffee",
     "roaster_id": 1,
     "bean_type": "Arabica",
@@ -8,12 +7,17 @@
     "country": "Ethiopia",
     "country_id": 1,
     "region": "Yirgacheffe",
-    "region_id": 1,
+    "region_id": 11,
     "product_name": "Yirgacheffe Single Origin",
     "roast_type": 3,
     "description": "Bright, floral Ethiopian coffee with citrus notes",
     "url": "https://bluebottlecoffee.com/coffee/yirgacheffe",
-    "image_url": null
+    "image_url": null,
+    "decaf": true,
+    "decaf_method": "Swiss water method",
+    "decaf_method_id": 1,
+    "rating": 3.5,
+    "id": 1
   },
   {
     "id": 2,

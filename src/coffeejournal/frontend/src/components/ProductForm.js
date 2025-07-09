@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useToast } from './Toast';
 import { API_BASE_URL } from '../config';
+import StarRating from './StarRating';
 
 function ProductForm() {
   const { id } = useParams(); // Get ID from URL for edit mode
@@ -17,6 +18,9 @@ function ProductForm() {
     description: '',
     url: '',
     image_url: '',
+    decaf: false,
+    decaf_method: '',
+    rating: ''
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -26,20 +30,23 @@ function ProductForm() {
   const [roasters, setRoasters] = useState([]);
   const [beanTypes, setBeanTypes] = useState([]);
   const [countries, setCountries] = useState([]);
+  const [decafMethods, setDecafMethods] = useState([]);
 
   useEffect(() => {
     // Fetch all lookup data when component mounts
     const fetchLookupData = async () => {
       try {
-        const [roastersRes, beanTypesRes, countriesRes] = await Promise.all([
+        const [roastersRes, beanTypesRes, countriesRes, decafMethodsRes] = await Promise.all([
           fetch(`${API_BASE_URL}/roasters`),
           fetch(`${API_BASE_URL}/bean_types`),
           fetch(`${API_BASE_URL}/countries`),
+          fetch(`${API_BASE_URL}/decaf_methods`),
         ]);
 
         setRoasters(await roastersRes.json());
         setBeanTypes(await beanTypesRes.json());
         setCountries(await countriesRes.json());
+        setDecafMethods(await decafMethodsRes.json());
       } catch (err) {
         console.error("Error fetching lookup data:", err);
         setError("Failed to load lookup data.");
@@ -75,8 +82,33 @@ function ProductForm() {
   };
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    const { name, value, type, checked } = e.target;
+    setFormData((prev) => ({ 
+      ...prev, 
+      [name]: type === 'checkbox' ? checked : value 
+    }));
+  };
+
+  const handleRatingChange = (rating) => {
+    setFormData((prev) => ({ ...prev, rating: rating }));
+  };
+
+  // Handle mobile datalist issues
+  const handleMobileDatalistFocus = (e) => {
+    // On mobile, temporarily remove the list attribute to prevent sticky dropdown
+    if (/Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+      e.target.removeAttribute('list');
+    }
+  };
+
+  const handleMobileDatalistBlur = (e) => {
+    // Restore the list attribute after blur
+    if (/Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+      const listId = e.target.getAttribute('data-list');
+      if (listId) {
+        e.target.setAttribute('list', listId);
+      }
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -126,6 +158,9 @@ function ProductForm() {
             value={formData.roaster}
             onChange={handleChange}
             list="roastersOptions"
+            data-list="roastersOptions"
+            onFocus={handleMobileDatalistFocus}
+            onBlur={handleMobileDatalistBlur}
             required
           />
           <datalist id="roastersOptions">
@@ -142,6 +177,9 @@ function ProductForm() {
             value={formData.bean_type}
             onChange={handleChange}
             list="beanTypesOptions"
+            data-list="beanTypesOptions"
+            onFocus={handleMobileDatalistFocus}
+            onBlur={handleMobileDatalistBlur}
           />
           <datalist id="beanTypesOptions">
             {beanTypes.map((bt) => (
@@ -157,6 +195,9 @@ function ProductForm() {
             value={formData.country}
             onChange={handleChange}
             list="countriesOptions"
+            data-list="countriesOptions"
+            onFocus={handleMobileDatalistFocus}
+            onBlur={handleMobileDatalistBlur}
           />
           <datalist id="countriesOptions">
             {countries.map((c) => (
@@ -172,6 +213,9 @@ function ProductForm() {
             value={formData.region}
             onChange={handleChange}
             list="regionsOptions"
+            data-list="regionsOptions"
+            onFocus={handleMobileDatalistFocus}
+            onBlur={handleMobileDatalistBlur}
           />
           <datalist id="regionsOptions">
             {/* Reusing countries for regions for simplicity, assuming regions might also be country names or unique names */}
@@ -213,6 +257,49 @@ function ProductForm() {
         <label>
           Image URL:
           <input type="url" name="image_url" value={formData.image_url} onChange={handleChange} />
+        </label>
+        
+        <label>
+          <input
+            type="checkbox"
+            name="decaf"
+            checked={formData.decaf}
+            onChange={handleChange}
+          />
+          Decaffeinated
+        </label>
+        
+        {formData.decaf && (
+          <label>
+            Decaf Method:
+            <input
+              type="text"
+              name="decaf_method"
+              value={formData.decaf_method}
+              onChange={handleChange}
+              list="decafMethodsOptions"
+              data-list="decafMethodsOptions"
+              onFocus={handleMobileDatalistFocus}
+              onBlur={handleMobileDatalistBlur}
+            />
+            <datalist id="decafMethodsOptions">
+              {decafMethods.map((dm) => (
+                <option key={dm.id} value={dm.name} />
+              ))}
+            </datalist>
+          </label>
+        )}
+        
+        <label>
+          Rating:
+          <div style={{ marginTop: '8px' }}>
+            <StarRating
+              rating={formData.rating}
+              onRatingChange={handleRatingChange}
+              maxRating={5}
+              size="xlarge"
+            />
+          </div>
         </label>
         <button 
           type="submit" 

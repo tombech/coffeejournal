@@ -74,6 +74,20 @@ def get_recipes():
     recipes = factory.get_recipe_repository().find_all()
     return jsonify(recipes)
 
+@api.route('/grinders', methods=['GET'])
+def get_grinders():
+    """Get all grinders."""
+    factory = get_repository_factory()
+    grinders = factory.get_grinder_repository().find_all()
+    return jsonify(grinders)
+
+@api.route('/decaf_methods', methods=['GET'])
+def get_decaf_methods():
+    """Get all decaffeination methods."""
+    factory = get_repository_factory()
+    decaf_methods = factory.get_decaf_method_repository().find_all()
+    return jsonify(decaf_methods)
+
 
 # --- Product Endpoints ---
 @api.route('/products', methods=['GET'])
@@ -141,6 +155,12 @@ def create_product():
     if data.get('region'):
         region = country_repo.get_or_create(data['region'])
     
+    # Handle decaf method if product is decaf
+    decaf_method = None
+    if data.get('decaf') and data.get('decaf_method'):
+        decaf_method_repo = factory.get_decaf_method_repository()
+        decaf_method = decaf_method_repo.get_or_create(data['decaf_method'])
+    
     # Create product
     product_data = {
         'roaster': roaster['name'],
@@ -155,7 +175,11 @@ def create_product():
         'roast_type': data.get('roast_type'),
         'description': data.get('description'),
         'url': data.get('url'),
-        'image_url': data.get('image_url')
+        'image_url': data.get('image_url'),
+        'decaf': data.get('decaf', False),
+        'decaf_method': decaf_method['name'] if decaf_method else None,
+        'decaf_method_id': decaf_method['id'] if decaf_method else None,
+        'rating': data.get('rating')
     }
     
     product = factory.get_product_repository().create(product_data)
@@ -198,6 +222,12 @@ def update_product(product_id):
     if data.get('region'):
         region = country_repo.get_or_create(data['region'])
     
+    # Handle decaf method if product is decaf
+    decaf_method = None
+    if data.get('decaf') and data.get('decaf_method'):
+        decaf_method_repo = factory.get_decaf_method_repository()
+        decaf_method = decaf_method_repo.get_or_create(data['decaf_method'])
+    
     # Update product
     product_data = {
         'roaster': roaster['name'],
@@ -212,7 +242,11 @@ def update_product(product_id):
         'roast_type': data.get('roast_type'),
         'description': data.get('description'),
         'url': data.get('url'),
-        'image_url': data.get('image_url')
+        'image_url': data.get('image_url'),
+        'decaf': data.get('decaf', False),
+        'decaf_method': decaf_method['name'] if decaf_method else None,
+        'decaf_method_id': decaf_method['id'] if decaf_method else None,
+        'rating': data.get('rating')
     }
     
     product = product_repo.update(product_id, product_data)
@@ -279,7 +313,8 @@ def handle_product_batches(product_id):
             'amount_grams': data.get('amount_grams'),
             'price': data.get('price'),
             'seller': data.get('seller'),
-            'notes': data.get('notes')
+            'notes': data.get('notes'),
+            'rating': data.get('rating')
         }
         
         batch_repo = factory.get_batch_repository()
@@ -340,7 +375,8 @@ def update_batch(batch_id):
         'amount_grams': data.get('amount_grams'),
         'price': data.get('price'),
         'seller': data.get('seller'),
-        'notes': data.get('notes')
+        'notes': data.get('notes'),
+        'rating': data.get('rating')
     }
     
     batch = batch_repo.update(batch_id, batch_data)
@@ -408,6 +444,10 @@ def handle_batch_brew_sessions(batch_id):
                 recipe = recipe_repo.find_by_id(session['recipe_id'])
                 session['recipe'] = recipe['name'] if recipe else None
             
+            if session.get('grinder_id'):
+                grinder = grinder_repo.find_by_id(session['grinder_id'])
+                session['grinder'] = grinder['name'] if grinder else None
+            
             # Calculate brew ratio
             session['brew_ratio'] = calculate_brew_ratio(session.get('amount_coffee_grams'), session.get('amount_water_grams'))
         
@@ -419,9 +459,10 @@ def handle_batch_brew_sessions(batch_id):
         if not data:
             return jsonify({'error': 'No data provided'}), 400
         
-        # Get or create brew method and recipe
+        # Get or create brew method, recipe, and grinder
         brew_method_repo = factory.get_brew_method_repository()
         recipe_repo = factory.get_recipe_repository()
+        grinder_repo = factory.get_grinder_repository()
         
         brew_method = None
         if data.get('brew_method'):
@@ -431,6 +472,10 @@ def handle_batch_brew_sessions(batch_id):
         if data.get('recipe'):
             recipe = recipe_repo.get_or_create(data['recipe'])
         
+        grinder = None
+        if data.get('grinder'):
+            grinder = grinder_repo.get_or_create(data['grinder'])
+        
         # Extract fields from request
         session_data = {
             'timestamp': data.get('timestamp', datetime.utcnow().isoformat()),
@@ -438,6 +483,8 @@ def handle_batch_brew_sessions(batch_id):
             'product_id': batch.get('product_id'),  # Get product_id from batch
             'recipe_id': recipe['id'] if recipe else data.get('recipe_id'),
             'brew_method_id': brew_method['id'] if brew_method else data.get('brew_method_id'),
+            'grinder_id': grinder['id'] if grinder else data.get('grinder_id'),
+            'grinder_setting': data.get('grinder_setting'),
             'amount_coffee_grams': data.get('amount_coffee_grams'),
             'amount_water_grams': data.get('amount_water_grams'),
             'brew_temperature_c': data.get('brew_temperature_c'),
@@ -449,6 +496,7 @@ def handle_batch_brew_sessions(batch_id):
             'body': data.get('body'),
             'aroma': data.get('aroma'),
             'flavor_profile_match': data.get('flavor_profile_match'),
+            'score': data.get('score'),
             'notes': data.get('notes')
         }
         
@@ -461,7 +509,7 @@ def handle_batch_brew_sessions(batch_id):
         if product:
             session['product_name'] = f"{product.get('roaster', 'N/A')} - {product.get('bean_type', 'N/A')}"
         
-        # Add brew method and recipe names
+        # Add brew method, recipe, and grinder names
         if brew_method:
             session['brew_method'] = brew_method['name']
         elif session.get('brew_method_id'):
@@ -473,6 +521,12 @@ def handle_batch_brew_sessions(batch_id):
         elif session.get('recipe_id'):
             rec = recipe_repo.find_by_id(session['recipe_id'])
             session['recipe'] = rec['name'] if rec else None
+        
+        if grinder:
+            session['grinder'] = grinder['name']
+        elif session.get('grinder_id'):
+            grind = grinder_repo.find_by_id(session['grinder_id'])
+            session['grinder'] = grind['name'] if grind else None
         
         # Calculate brew ratio
         session['brew_ratio'] = calculate_brew_ratio(session.get('amount_coffee_grams'), session.get('amount_water_grams'))
@@ -494,6 +548,7 @@ def get_all_brew_sessions():
     batch_repo = factory.get_batch_repository()
     brew_method_repo = factory.get_brew_method_repository()
     recipe_repo = factory.get_recipe_repository()
+    grinder_repo = factory.get_grinder_repository()
     
     for session in sessions:
         # Get product and batch info for enrichment
@@ -505,6 +560,7 @@ def get_all_brew_sessions():
             session['product_details'] = {
                 'roaster': product.get('roaster'),
                 'bean_type': product.get('bean_type'),
+                'product_name': product.get('product_name'),
                 'roast_date': batch.get('roast_date') if batch else None,
                 'roast_type': product.get('roast_type')
             }
@@ -519,6 +575,10 @@ def get_all_brew_sessions():
         if session.get('recipe_id'):
             recipe = recipe_repo.find_by_id(session['recipe_id'])
             session['recipe'] = recipe['name'] if recipe else None
+        
+        if session.get('grinder_id'):
+            grinder = grinder_repo.find_by_id(session['grinder_id'])
+            session['grinder'] = grinder['name'] if grinder else None
         
         # Calculate brew ratio using consistent field names
         session['brew_ratio'] = calculate_brew_ratio(session.get('amount_coffee_grams'), session.get('amount_water_grams'))
@@ -561,7 +621,7 @@ def get_brew_session(session_id):
     else:
         session['product_details'] = {}
     
-    # Add brew method and recipe names
+    # Add brew method, recipe, and grinder names
     if session.get('brew_method_id'):
         brew_method = brew_method_repo.find_by_id(session['brew_method_id'])
         session['brew_method'] = brew_method['name'] if brew_method else None
@@ -569,6 +629,11 @@ def get_brew_session(session_id):
     if session.get('recipe_id'):
         recipe = recipe_repo.find_by_id(session['recipe_id'])
         session['recipe'] = recipe['name'] if recipe else None
+    
+    if session.get('grinder_id'):
+        grinder_repo = factory.get_grinder_repository()
+        grinder = grinder_repo.find_by_id(session['grinder_id'])
+        session['grinder'] = grinder['name'] if grinder else None
     
     return jsonify(session)
 
@@ -599,9 +664,10 @@ def update_brew_session(session_id):
     if not batch:
         return jsonify({'error': 'Batch not found'}), 404
     
-    # Get or create brew method and recipe
+    # Get or create brew method, recipe, and grinder
     brew_method_repo = factory.get_brew_method_repository()
     recipe_repo = factory.get_recipe_repository()
+    grinder_repo = factory.get_grinder_repository()
     
     brew_method = None
     if data.get('brew_method'):
@@ -611,6 +677,10 @@ def update_brew_session(session_id):
     if data.get('recipe'):
         recipe = recipe_repo.get_or_create(data['recipe'])
     
+    grinder = None
+    if data.get('grinder'):
+        grinder = grinder_repo.get_or_create(data['grinder'])
+    
     # Update brew session
     session_data = {
         'timestamp': data.get('timestamp', existing_session['timestamp']),
@@ -618,6 +688,8 @@ def update_brew_session(session_id):
         'product_id': product_id,
         'brew_method_id': brew_method['id'] if brew_method else None,
         'recipe_id': recipe['id'] if recipe else None,
+        'grinder_id': grinder['id'] if grinder else None,
+        'grinder_setting': data.get('grinder_setting'),
         'amount_coffee_grams': data.get('amount_coffee_grams'),
         'amount_water_grams': data.get('amount_water_grams'),
         'brew_temperature_c': data.get('brew_temperature_c'),
@@ -629,6 +701,7 @@ def update_brew_session(session_id):
         'body': data.get('body'),
         'aroma': data.get('aroma'),
         'flavor_profile_match': data.get('flavor_profile_match'),
+        'score': data.get('score'),
         'notes': data.get('notes')
     }
     
@@ -641,9 +714,15 @@ def update_brew_session(session_id):
     )
     session['brew_method'] = brew_method['name'] if brew_method else None
     session['recipe'] = recipe['name'] if recipe else None
+    if grinder:
+        session['grinder'] = grinder['name']
+    elif session.get('grinder_id'):
+        grinder_lookup = grinder_repo.find_by_id(session['grinder_id'])
+        session['grinder'] = grinder_lookup['name'] if grinder_lookup else None
     session['product_details'] = {
         'roaster': product.get('roaster'),
         'bean_type': product.get('bean_type'),
+        'product_name': product.get('product_name'),
         'roast_date': batch.get('roast_date'),
         'roast_type': product.get('roast_type')
     }

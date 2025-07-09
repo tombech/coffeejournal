@@ -52,6 +52,9 @@ function BrewSessionTable({ sessions, onDelete, onDuplicate, onEdit, onRefresh, 
       if (sortColumn === 'bean_type') {
         aVal = a.product_details?.bean_type || '';
         bVal = b.product_details?.bean_type || '';
+      } else if (sortColumn === 'product_name') {
+        aVal = a.product_details?.product_name || '';
+        bVal = b.product_details?.product_name || '';
       } else if (sortColumn === 'timestamp') {
         aVal = new Date(a.timestamp);
         bVal = new Date(b.timestamp);
@@ -187,15 +190,15 @@ function BrewSessionTable({ sessions, onDelete, onDuplicate, onEdit, onRefresh, 
 
       {/* Table */}
       <div>
-        <table style={{ borderCollapse: 'collapse', fontSize: '12px' }}>
+        <table style={{ borderCollapse: 'collapse', fontSize: '12px', whiteSpace: 'nowrap' }}>
           <thead>
             <tr style={{ backgroundColor: '#e9ecef' }}>
               <th style={{ padding: '4px', border: '1px solid #ddd', width: '110px', fontSize: '12px', textAlign: 'left' }}>Actions</th>
               <th 
                 style={{ padding: '4px', border: '1px solid #ddd', cursor: 'pointer', userSelect: 'none', fontSize: '12px', whiteSpace: 'nowrap', textAlign: 'left' }}
-                onClick={() => handleSort('bean_type')}
+                onClick={() => handleSort('product_name')}
               >
-                Bean Type{getSortIcon('bean_type')}
+                Product{getSortIcon('product_name')}
               </th>
               <th 
                 style={{ padding: '4px', border: '1px solid #ddd', cursor: 'pointer', userSelect: 'none', fontSize: '12px', whiteSpace: 'nowrap', textAlign: 'left' }}
@@ -281,6 +284,19 @@ function BrewSessionTable({ sessions, onDelete, onDuplicate, onEdit, onRefresh, 
               >
                 Aroma{getSortIcon('aroma')}
               </th>
+              <th 
+                style={{ padding: '4px', border: '1px solid #ddd', cursor: 'pointer', userSelect: 'none', fontSize: '12px', whiteSpace: 'nowrap', textAlign: 'left' }}
+                onClick={() => handleSort('grinder')}
+              >
+                Grinder{getSortIcon('grinder')}
+              </th>
+              <th style={{ padding: '4px', border: '1px solid #ddd', fontSize: '12px', whiteSpace: 'nowrap', textAlign: 'left' }}>Setting</th>
+              <th 
+                style={{ padding: '4px', border: '1px solid #ddd', cursor: 'pointer', userSelect: 'none', fontSize: '12px', whiteSpace: 'nowrap', textAlign: 'left' }}
+                onClick={() => handleSort('score')}
+              >
+                Score{getSortIcon('score')}
+              </th>
               <th style={{ padding: '4px', border: '1px solid #ddd', fontSize: '12px', whiteSpace: 'nowrap', textAlign: 'left' }}>Notes</th>
             </tr>
           </thead>
@@ -322,9 +338,9 @@ function BrewSessionTable({ sessions, onDelete, onDuplicate, onEdit, onRefresh, 
                     maxWidth: '200px',
                     verticalAlign: 'top'
                   }}
-                  title={`${session.product_details?.bean_type || 'Unknown'}\n\nRoaster: ${session.product_details?.roaster || 'Unknown'}\nRoast Date: ${session.product_details?.roast_date ? formatDateNorwegian(session.product_details.roast_date) : 'Unknown'}`}
+                  title={`${session.product_details?.product_name || 'Unknown'}\n\nBean Type: ${session.product_details?.bean_type || 'Unknown'}\nRoaster: ${session.product_details?.roaster || 'Unknown'}\nRoast Date: ${session.product_details?.roast_date ? formatDateNorwegian(session.product_details.roast_date) : 'Unknown'}`}
                 >
-                  {session.product_details?.bean_type || '-'}
+                  {session.product_details?.product_name || '-'}
                 </td>
                 <td 
                   style={{ padding: '4px', border: '1px solid #ddd', fontSize: '12px', cursor: 'help', verticalAlign: 'top' }}
@@ -332,29 +348,32 @@ function BrewSessionTable({ sessions, onDelete, onDuplicate, onEdit, onRefresh, 
                 >
                   {formatDateNorwegian(session.timestamp)}
                 </td>
-                <td style={{ padding: '4px', border: '1px solid #ddd', fontSize: '12px', verticalAlign: 'top' }}>{session.brew_method || '-'}</td>
-                <td style={{ padding: '4px', border: '1px solid #ddd', fontSize: '12px', verticalAlign: 'top' }}>{session.recipe || '-'}</td>
-                <td style={{ padding: '4px', border: '1px solid #ddd', fontSize: '12px', textAlign: 'center', verticalAlign: 'top' }}>
+                <td style={{ padding: '4px', border: '1px solid #ddd', fontSize: '12px', verticalAlign: 'top', whiteSpace: 'nowrap' }}>{session.brew_method || '-'}</td>
+                <td style={{ padding: '4px', border: '1px solid #ddd', fontSize: '12px', verticalAlign: 'top', whiteSpace: 'nowrap' }}>{session.recipe || '-'}</td>
+                <td style={{ padding: '4px', border: '1px solid #ddd', fontSize: '12px', textAlign: 'center', verticalAlign: 'top', whiteSpace: 'nowrap' }}>
                   {session.amount_coffee_grams ? `${session.amount_coffee_grams}g` : '-'}
                 </td>
-                <td style={{ padding: '4px', border: '1px solid #ddd', fontSize: '12px', textAlign: 'center', verticalAlign: 'top' }}>
+                <td style={{ padding: '4px', border: '1px solid #ddd', fontSize: '12px', textAlign: 'center', verticalAlign: 'top', whiteSpace: 'nowrap' }}>
                   {session.amount_water_grams ? `${session.amount_water_grams}g` : '-'}
                 </td>
-                <td style={{ padding: '4px', border: '1px solid #ddd', fontSize: '12px', textAlign: 'center', verticalAlign: 'top' }}>{session.brew_ratio || '-'}</td>
-                <td style={{ padding: '4px', border: '1px solid #ddd', fontSize: '12px', textAlign: 'center', verticalAlign: 'top' }}>
+                <td style={{ padding: '4px', border: '1px solid #ddd', fontSize: '12px', textAlign: 'center', verticalAlign: 'top', whiteSpace: 'nowrap' }}>{session.brew_ratio || '-'}</td>
+                <td style={{ padding: '4px', border: '1px solid #ddd', fontSize: '12px', textAlign: 'center', verticalAlign: 'top', whiteSpace: 'nowrap' }}>
                   {session.brew_temperature_c ? `${session.brew_temperature_c}°C` : '-'}
                 </td>
-                <td style={{ padding: '4px', border: '1px solid #ddd', fontSize: '12px', textAlign: 'center', verticalAlign: 'top' }}>
+                <td style={{ padding: '4px', border: '1px solid #ddd', fontSize: '12px', textAlign: 'center', verticalAlign: 'top', whiteSpace: 'nowrap' }}>
                   {formatSecondsToMinSec(session.bloom_time_seconds)}
                 </td>
-                <td style={{ padding: '4px', border: '1px solid #ddd', fontSize: '12px', textAlign: 'center', verticalAlign: 'top' }}>
+                <td style={{ padding: '4px', border: '1px solid #ddd', fontSize: '12px', textAlign: 'center', verticalAlign: 'top', whiteSpace: 'nowrap' }}>
                   {formatSecondsToMinSec(session.brew_time_seconds)}
                 </td>
-                <td style={{ padding: '4px', border: '1px solid #ddd', fontSize: '12px', textAlign: 'center', verticalAlign: 'top' }}>{session.sweetness || '-'}</td>
-                <td style={{ padding: '4px', border: '1px solid #ddd', fontSize: '12px', textAlign: 'center', verticalAlign: 'top' }}>{session.acidity || '-'}</td>
-                <td style={{ padding: '4px', border: '1px solid #ddd', fontSize: '12px', textAlign: 'center', verticalAlign: 'top' }}>{session.bitterness || '-'}</td>
-                <td style={{ padding: '4px', border: '1px solid #ddd', fontSize: '12px', textAlign: 'center', verticalAlign: 'top' }}>{session.body || '-'}</td>
-                <td style={{ padding: '4px', border: '1px solid #ddd', fontSize: '12px', textAlign: 'center', verticalAlign: 'top' }}>{session.aroma || '-'}</td>
+                <td style={{ padding: '4px', border: '1px solid #ddd', fontSize: '12px', textAlign: 'center', verticalAlign: 'top', whiteSpace: 'nowrap' }}>{session.sweetness || '-'}</td>
+                <td style={{ padding: '4px', border: '1px solid #ddd', fontSize: '12px', textAlign: 'center', verticalAlign: 'top', whiteSpace: 'nowrap' }}>{session.acidity || '-'}</td>
+                <td style={{ padding: '4px', border: '1px solid #ddd', fontSize: '12px', textAlign: 'center', verticalAlign: 'top', whiteSpace: 'nowrap' }}>{session.bitterness || '-'}</td>
+                <td style={{ padding: '4px', border: '1px solid #ddd', fontSize: '12px', textAlign: 'center', verticalAlign: 'top', whiteSpace: 'nowrap' }}>{session.body || '-'}</td>
+                <td style={{ padding: '4px', border: '1px solid #ddd', fontSize: '12px', textAlign: 'center', verticalAlign: 'top', whiteSpace: 'nowrap' }}>{session.aroma || '-'}</td>
+                <td style={{ padding: '4px', border: '1px solid #ddd', fontSize: '12px', verticalAlign: 'top', whiteSpace: 'nowrap' }}>{session.grinder || '-'}</td>
+                <td style={{ padding: '4px', border: '1px solid #ddd', fontSize: '12px', verticalAlign: 'top', whiteSpace: 'nowrap' }}>{session.grinder_setting || '-'}</td>
+                <td style={{ padding: '4px', border: '1px solid #ddd', fontSize: '12px', textAlign: 'center', verticalAlign: 'top', whiteSpace: 'nowrap' }}>{session.score || '-'}</td>
                 <td 
                   style={{ 
                     padding: '4px', 

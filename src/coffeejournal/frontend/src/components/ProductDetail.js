@@ -3,6 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import BatchForm from './BatchForm';
 import { useToast } from './Toast';
 import { API_BASE_URL } from '../config';
+import StarRating from './StarRating';
 
 function ProductDetail() {
   const { id } = useParams();
@@ -156,7 +157,7 @@ function ProductDetail() {
   return (
     <div>
       <div style={{ marginBottom: '15px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-        <h2 style={{ margin: 0, marginRight: 'auto' }}>{product.roaster} - {product.bean_type}</h2>
+        <h2 style={{ margin: 0, marginRight: 'auto' }}>{product.product_name}</h2>
         <Link 
           to={`/products/edit/${product.id}`}
           style={{ 
@@ -207,6 +208,22 @@ function ProductDetail() {
           
           <strong>Roast Type:</strong>
           <span>{product.roast_type ? `${getRoastVisualization(product.roast_type)} (${product.roast_type})` : '-'}</span>
+          
+          <strong>Decaffeinated:</strong>
+          <span>
+            {product.decaf ? (
+              <span style={{ color: '#1976d2', fontWeight: 'bold' }}>
+                Yes {product.decaf_method && `(${product.decaf_method})`}
+              </span>
+            ) : 'No'}
+          </span>
+          
+          <strong>Rating:</strong>
+          <span>
+            {product.rating ? (
+              <StarRating rating={product.rating} readOnly={true} maxRating={5} />
+            ) : '-'}
+          </span>
           
           <strong>Description:</strong>
           <span>{product.description || '-'}</span>
@@ -306,6 +323,13 @@ function ProductDetail() {
                   
                   <strong>Seller:</strong>
                   <span>{batch.seller || '-'}</span>
+                  
+                  <strong>Rating:</strong>
+                  <span>
+                    {batch.rating ? (
+                      <StarRating rating={batch.rating} readOnly={true} maxRating={5} />
+                    ) : '-'}
+                  </span>
                   
                   <strong>Notes:</strong>
                   <span>{batch.notes || '-'}</span>

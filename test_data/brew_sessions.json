@@ -80,15 +80,16 @@
     "notes": "AeroPress brings out the wine-like characteristics perfectly"
   },
   {
-    "id": 5,
     "timestamp": "2025-01-06T08:00:00",
     "product_batch_id": 5,
     "product_id": 1,
     "brew_method_id": 1,
     "recipe_id": 2,
-    "amount_coffee_grams": 20.0,
-    "amount_water_grams": 300.0,
-    "brew_temperature_c": 92.0,
+    "grinder_id": 1,
+    "grinder_setting": "22",
+    "amount_coffee_grams": 20,
+    "amount_water_grams": 300,
+    "brew_temperature_c": 92,
     "bloom_time_seconds": 45,
     "brew_time_seconds": 210,
     "sweetness": 9,
@@ -97,18 +98,19 @@
     "body": 7,
     "aroma": 9,
     "flavor_profile_match": 9,
-    "notes": "4:6 method enhanced the sweetness dramatically"
+    "score": null,
+    "notes": "4:6 method enhanced the sweetness dramatically",
+    "id": 5
   },
   {
-    "id": 6,
     "timestamp": "2025-01-04T14:30:00",
     "product_batch_id": 6,
     "product_id": 5,
-    "brew_method_id": 5,
+    "brew_method_id": 9,
     "recipe_id": null,
-    "amount_coffee_grams": 18.0,
-    "amount_water_grams": 36.0,
-    "brew_temperature_c": 94.0,
+    "amount_coffee_grams": 18,
+    "amount_water_grams": 36,
+    "brew_temperature_c": 94,
     "bloom_time_seconds": null,
     "brew_time_seconds": 25,
     "sweetness": 5,
@@ -117,6 +119,7 @@
     "body": 9,
     "aroma": 7,
     "flavor_profile_match": 8,
-    "notes": "Perfect for espresso, rich crema and balanced bitterness"
+    "notes": "Perfect for espresso, rich crema and balanced bitterness",
+    "id": 6
   }
 ]

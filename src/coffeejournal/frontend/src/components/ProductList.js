@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useToast } from './Toast';
 import { API_BASE_URL } from '../config';
+import StarRating from './StarRating';
 
 function ProductList() {
   const { addToast } = useToast();
@@ -110,12 +111,41 @@ function ProductList() {
                     />
                   )}
                   <div className="product-content">
-                    <h4 style={{ margin: '0 0 8px 0', color: '#333' }}>{product.bean_type}</h4>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
+                      <h4 style={{ margin: '0', color: '#333', flex: 1 }}>{product.product_name}</h4>
+                      {product.decaf && (
+                        <span style={{ 
+                          backgroundColor: '#e3f2fd', 
+                          color: '#1976d2', 
+                          padding: '2px 6px', 
+                          borderRadius: '3px', 
+                          fontSize: '11px', 
+                          fontWeight: 'bold',
+                          marginLeft: '8px'
+                        }}>
+                          DECAF
+                        </span>
+                      )}
+                    </div>
                     <p style={{ margin: '0 0 6px 0', fontSize: '14px', color: '#666' }}>
-                      <strong>Origin:</strong> {product.country}{product.region ? ` (${product.region})` : ''}
+                      <strong>{product.bean_type}</strong> • {product.country}{product.region ? ` (${product.region})` : ''}
                     </p>
+                    {product.rating && (
+                      <div style={{ margin: '0 0 8px 0' }}>
+                        <StarRating rating={product.rating} readOnly={true} maxRating={5} />
+                      </div>
+                    )}
                     {product.description && (
-                      <p style={{ margin: '0 0 8px 0', fontSize: '13px', lineHeight: '1.3' }}>
+                      <p style={{ 
+                        margin: '0 0 8px 0', 
+                        fontSize: '13px', 
+                        lineHeight: '1.3',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        display: '-webkit-box',
+                        WebkitLineClamp: 3,
+                        WebkitBoxOrient: 'vertical'
+                      }}>
                         {product.description}
                       </p>
                     )}

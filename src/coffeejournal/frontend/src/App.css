@@ -15,7 +15,7 @@ body {
 .App {
   padding: 15px;
   box-sizing: border-box;
-  overflow-x: auto;
+  min-width: fit-content;
 }
 
 /* Header and Navigation */
@@ -26,6 +26,7 @@ body {
   border-radius: 8px;
   margin-bottom: 10px;
   text-align: center;
+  min-width: fit-content;
 }
 
 .App-header h1 {
@@ -61,6 +62,7 @@ body {
   padding: 15px;
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  min-width: fit-content;
 }
 
 /* Common Form Styling */

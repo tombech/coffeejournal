@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useToast } from './Toast';
 import { API_BASE_URL } from '../config';
+import StarRating from './StarRating';
 
 function BatchForm({ productId, initialData, onBatchSubmitted, onCancel }) {
   const [formData, setFormData] = useState({
@@ -9,7 +10,8 @@ function BatchForm({ productId, initialData, onBatchSubmitted, onCancel }) {
     amount_grams: '',
     price: '',
     seller: '',
-    notes: ''
+    notes: '',
+    rating: ''
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -39,6 +41,10 @@ function BatchForm({ productId, initialData, onBatchSubmitted, onCancel }) {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleRatingChange = (rating) => {
+    setFormData(prev => ({ ...prev, rating: rating }));
   };
 
   const handleSubmit = async (e) => {
@@ -218,6 +224,20 @@ function BatchForm({ productId, initialData, onBatchSubmitted, onCancel }) {
               rows="3"
               placeholder="Any additional notes about this batch..."
             />
+          </label>
+        </div>
+
+        <div style={{ marginBottom: '20px' }}>
+          <label>
+            Rating:
+            <div style={{ marginTop: '8px' }}>
+              <StarRating
+                rating={formData.rating}
+                onRatingChange={handleRatingChange}
+                maxRating={5}
+                size="xlarge"
+              />
+            </div>
           </label>
         </div>
 

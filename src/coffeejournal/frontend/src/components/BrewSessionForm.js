@@ -9,6 +9,8 @@ function BrewSessionForm({ product_batch_id = null, onSessionSubmitted, initialD
     product_id: '',
     brew_method: '',
     recipe: '',
+    grinder: '',
+    grinder_setting: '',
     amount_coffee_grams: '',
     amount_water_grams: '',
     brew_temperature_c: '',
@@ -21,6 +23,7 @@ function BrewSessionForm({ product_batch_id = null, onSessionSubmitted, initialD
     body: '',
     aroma: '',
     flavor_profile_match: '',
+    score: '',
     notes: '',
     timestamp: new Date().toISOString(), // Default to now
   });
@@ -31,19 +34,22 @@ function BrewSessionForm({ product_batch_id = null, onSessionSubmitted, initialD
   // State for dynamic dropdown options
   const [brewMethods, setBrewMethods] = useState([]);
   const [recipes, setRecipes] = useState([]);
+  const [grinders, setGrinders] = useState([]);
   const [products, setProducts] = useState([]);
   const [batches, setBatches] = useState([]);
 
   useEffect(() => {
     const fetchLookupData = async () => {
       try {
-        const [brewMethodsRes, recipesRes, productsRes] = await Promise.all([
+        const [brewMethodsRes, recipesRes, grindersRes, productsRes] = await Promise.all([
           fetch(`${API_BASE_URL}/brew_methods`),
           fetch(`${API_BASE_URL}/recipes`),
+          fetch(`${API_BASE_URL}/grinders`),
           fetch(`${API_BASE_URL}/products`),
         ]);
         setBrewMethods(await brewMethodsRes.json());
         setRecipes(await recipesRes.json());
+        setGrinders(await grindersRes.json());
         setProducts(await productsRes.json());
       } catch (err) {
         console.error("Error fetching lookup data:", err);
@@ -96,6 +102,24 @@ function BrewSessionForm({ product_batch_id = null, onSessionSubmitted, initialD
     if (name === 'product_id' && value) {
       fetchBatchesForProduct(value);
       setFormData((prev) => ({ ...prev, product_batch_id: '' })); // Reset batch selection
+    }
+  };
+
+  // Handle mobile datalist issues
+  const handleMobileDatalistFocus = (e) => {
+    // On mobile, temporarily remove the list attribute to prevent sticky dropdown
+    if (/Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+      e.target.removeAttribute('list');
+    }
+  };
+
+  const handleMobileDatalistBlur = (e) => {
+    // Restore the list attribute after blur
+    if (/Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+      const listId = e.target.getAttribute('data-list');
+      if (listId) {
+        e.target.setAttribute('list', listId);
+      }
     }
   };
 
@@ -181,7 +205,7 @@ function BrewSessionForm({ product_batch_id = null, onSessionSubmitted, initialD
               <option value="">Select a product</option>
               {products.map((product) => (
                 <option key={product.id} value={product.id}>
-                  {product.roaster} - {product.bean_type}
+                  {product.roaster} - {product.product_name}
                 </option>
               ))}
             </select>
@@ -215,6 +239,9 @@ function BrewSessionForm({ product_batch_id = null, onSessionSubmitted, initialD
           value={formData.brew_method}
           onChange={handleChange}
           list="brewMethodsOptions"
+          data-list="brewMethodsOptions"
+          onFocus={handleMobileDatalistFocus}
+          onBlur={handleMobileDatalistBlur}
           required
         />
         <datalist id="brewMethodsOptions">
@@ -231,12 +258,37 @@ function BrewSessionForm({ product_batch_id = null, onSessionSubmitted, initialD
           value={formData.recipe}
           onChange={handleChange}
           list="recipesOptions"
+          data-list="recipesOptions"
+          onFocus={handleMobileDatalistFocus}
+          onBlur={handleMobileDatalistBlur}
         />
         <datalist id="recipesOptions">
           {recipes.map((r) => (
             <option key={r.id} value={r.name} />
           ))}
         </datalist>
+      </label>
+      <label>
+        Grinder:
+        <input
+          type="text"
+          name="grinder"
+          value={formData.grinder}
+          onChange={handleChange}
+          list="grindersOptions"
+          data-list="grindersOptions"
+          onFocus={handleMobileDatalistFocus}
+          onBlur={handleMobileDatalistBlur}
+        />
+        <datalist id="grindersOptions">
+          {grinders.map((g) => (
+            <option key={g.id} value={g.name} />
+          ))}
+        </datalist>
+      </label>
+      <label>
+        Grinder Setting:
+        <input type="text" name="grinder_setting" value={formData.grinder_setting} onChange={handleChange} />
       </label>
       <label>
         Coffee Amount (grams):
@@ -268,6 +320,9 @@ function BrewSessionForm({ product_batch_id = null, onSessionSubmitted, initialD
       <label>Body: <input type="number" name="body" value={formData.body} onChange={handleChange} min="1" max="10" /></label>
       <label>Aroma: <input type="number" name="aroma" value={formData.aroma} onChange={handleChange} min="1" max="10" /></label>
       <label>Flavor Profile Match: <input type="number" name="flavor_profile_match" value={formData.flavor_profile_match} onChange={handleChange} min="1" max="10" /></label>
+
+      <h4>Overall Score (1-10)</h4>
+      <label>Score: <input type="number" name="score" value={formData.score} onChange={handleChange} min="1" max="10" /></label>
 
       <label>
         Notes:

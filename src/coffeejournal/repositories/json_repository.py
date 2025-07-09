@@ -217,3 +217,15 @@ class BrewSessionRepository(JSONRepositoryBase):
         if deleted_count > 0:
             self._write_data(all_data)
         return deleted_count
+
+
+class GrinderRepository(JSONLookupRepository):
+    """Repository for Grinder entities."""
+    def __init__(self, data_dir: str):
+        super().__init__(data_dir, 'grinders.json')
+
+
+class DecafMethodRepository(JSONLookupRepository):
+    """Repository for DecafMethod entities."""
+    def __init__(self, data_dir: str):
+        super().__init__(data_dir, 'decaf_methods.json')

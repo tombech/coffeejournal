@@ -3,7 +3,8 @@ from typing import Dict, Any
 from .json_repository import (
     RoasterRepository, BeanTypeRepository, CountryRepository,
     BrewMethodRepository, RecipeRepository, ProductRepository,
-    BatchRepository, BrewSessionRepository
+    BatchRepository, BrewSessionRepository, GrinderRepository,
+    DecafMethodRepository
 )
 
 
@@ -90,6 +91,24 @@ class RepositoryFactory:
             else:
                 raise NotImplementedError(f"Storage type {self.storage_type} not implemented")
         return self._repositories['brew_session']
+    
+    def get_grinder_repository(self) -> GrinderRepository:
+        """Get or create grinder repository."""
+        if 'grinder' not in self._repositories:
+            if self.storage_type == 'json':
+                self._repositories['grinder'] = GrinderRepository(self._get_data_dir())
+            else:
+                raise NotImplementedError(f"Storage type {self.storage_type} not implemented")
+        return self._repositories['grinder']
+    
+    def get_decaf_method_repository(self) -> DecafMethodRepository:
+        """Get or create decaf method repository."""
+        if 'decaf_method' not in self._repositories:
+            if self.storage_type == 'json':
+                self._repositories['decaf_method'] = DecafMethodRepository(self._get_data_dir())
+            else:
+                raise NotImplementedError(f"Storage type {self.storage_type} not implemented")
+        return self._repositories['decaf_method']
 
 
 # Global factory instance
