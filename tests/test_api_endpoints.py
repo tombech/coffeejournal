@@ -343,6 +343,71 @@ class TestBrewSessionEndpoints:
         assert updated_session['sweetness'] == 9
         assert updated_session['notes'] == 'Updated notes'
         assert updated_session['brew_method'] == 'Chemex'
+    
+    def test_brew_session_with_method_and_recipe(self, client):
+        """Test that brew method and recipe are properly stored and returned."""
+        # Create product and batch
+        product_response = client.post('/api/products', json={
+            'roaster': 'Test Roaster',
+            'bean_type': 'Arabica'
+        })
+        product_id = product_response.get_json()['id']
+        
+        batch_response = client.post(f'/api/products/{product_id}/batches', json={
+            'roast_date': '2025-01-01',
+            'amount_grams': 340
+        })
+        batch_id = batch_response.get_json()['id']
+        
+        # Create brew session with method and recipe
+        session_data = {
+            'brew_method': 'Aeropress',
+            'recipe': 'Inverted Method - 2:30 total',
+            'amount_coffee_grams': 15.0,
+            'amount_water_grams': 225.0,
+            'brew_temperature_c': 85.0,
+            'brew_time_seconds': 150,
+            'notes': 'Testing method and recipe storage'
+        }
+        
+        # Create the session
+        create_response = client.post(f'/api/batches/{batch_id}/brew_sessions', json=session_data)
+        assert create_response.status_code == 201
+        
+        created_session = create_response.get_json()
+        session_id = created_session['id']
+        
+        # Verify the response includes method and recipe
+        assert created_session['brew_method'] == 'Aeropress'
+        assert created_session['recipe'] == 'Inverted Method - 2:30 total'
+        
+        # Get the session directly
+        get_response = client.get(f'/api/brew_sessions/{session_id}')
+        assert get_response.status_code == 200
+        
+        fetched_session = get_response.get_json()
+        assert fetched_session['brew_method'] == 'Aeropress'
+        assert fetched_session['recipe'] == 'Inverted Method - 2:30 total'
+        
+        # Get all sessions and verify our session is included with method and recipe
+        all_sessions_response = client.get('/api/brew_sessions')
+        assert all_sessions_response.status_code == 200
+        
+        all_sessions = all_sessions_response.get_json()
+        our_session = next((s for s in all_sessions if s['id'] == session_id), None)
+        assert our_session is not None
+        assert our_session['brew_method'] == 'Aeropress'
+        assert our_session['recipe'] == 'Inverted Method - 2:30 total'
+        
+        # Get sessions by batch and verify method and recipe are included
+        batch_sessions_response = client.get(f'/api/batches/{batch_id}/brew_sessions')
+        assert batch_sessions_response.status_code == 200
+        
+        batch_sessions = batch_sessions_response.get_json()
+        batch_session = next((s for s in batch_sessions if s['id'] == session_id), None)
+        assert batch_session is not None
+        assert batch_session['brew_method'] == 'Aeropress'
+        assert batch_session['recipe'] == 'Inverted Method - 2:30 total'
 
 
 class TestLookupEndpoints:

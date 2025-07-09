@@ -387,13 +387,26 @@ def handle_batch_brew_sessions(batch_id):
     if request.method == 'GET':
         sessions = factory.get_brew_session_repository().find_by_batch(batch_id)
         
+        # Get repositories for enrichment
+        product_repo = factory.get_product_repository()
+        brew_method_repo = factory.get_brew_method_repository()
+        recipe_repo = factory.get_recipe_repository()
+        
         # Enrich with product and batch information
         for session in sessions:
             # Get product info for enrichment
-            product_repo = factory.get_product_repository()
             product = product_repo.find_by_id(batch.get('product_id'))
             if product:
                 session['product_name'] = f"{product.get('roaster', 'N/A')} - {product.get('bean_type', 'N/A')}"
+            
+            # Add brew method and recipe names
+            if session.get('brew_method_id'):
+                method = brew_method_repo.find_by_id(session['brew_method_id'])
+                session['brew_method'] = method['name'] if method else None
+            
+            if session.get('recipe_id'):
+                recipe = recipe_repo.find_by_id(session['recipe_id'])
+                session['recipe'] = recipe['name'] if recipe else None
             
             # Calculate brew ratio
             session['brew_ratio'] = calculate_brew_ratio(session.get('amount_coffee_grams'), session.get('amount_water_grams'))
@@ -479,6 +492,8 @@ def get_all_brew_sessions():
     # Enrich with product information and calculate brew ratio
     product_repo = factory.get_product_repository()
     batch_repo = factory.get_batch_repository()
+    brew_method_repo = factory.get_brew_method_repository()
+    recipe_repo = factory.get_recipe_repository()
     
     for session in sessions:
         # Get product and batch info for enrichment
@@ -495,6 +510,15 @@ def get_all_brew_sessions():
             }
         else:
             session['product_details'] = {}
+        
+        # Add brew method and recipe names
+        if session.get('brew_method_id'):
+            method = brew_method_repo.find_by_id(session['brew_method_id'])
+            session['brew_method'] = method['name'] if method else None
+        
+        if session.get('recipe_id'):
+            recipe = recipe_repo.find_by_id(session['recipe_id'])
+            session['recipe'] = recipe['name'] if recipe else None
         
         # Calculate brew ratio using consistent field names
         session['brew_ratio'] = calculate_brew_ratio(session.get('amount_coffee_grams'), session.get('amount_water_grams'))
