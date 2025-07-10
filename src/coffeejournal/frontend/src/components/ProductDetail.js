@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import BatchForm from './BatchForm';
+import BrewSessionTable from './BrewSessionTable';
 import { useToast } from './Toast';
 import { API_BASE_URL } from '../config';
 import StarRating from './StarRating';
@@ -15,10 +16,12 @@ function ProductDetail() {
   const [error, setError] = useState(null);
   const [showBatchForm, setShowBatchForm] = useState(false);
   const [editingBatch, setEditingBatch] = useState(null);
+  const [brewSessions, setBrewSessions] = useState([]);
 
   useEffect(() => {
     fetchProductDetails();
     fetchBatches();
+    fetchBrewSessions();
   }, [id]);
 
   const fetchProductDetails = async () => {
@@ -59,6 +62,21 @@ function ProductDetail() {
     } catch (err) {
       setError("Failed to fetch batches: " + err.message);
       console.error("Error fetching batches:", err);
+    }
+  };
+
+  const fetchBrewSessions = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/brew_sessions`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data = await response.json();
+      // Filter sessions for this product
+      const productSessions = data.filter(session => session.product_id === parseInt(id));
+      setBrewSessions(productSessions);
+    } catch (err) {
+      console.error("Error fetching brew sessions:", err);
     }
   };
 
@@ -146,6 +164,208 @@ function ProductDetail() {
       }
     }
     return visualization;
+  };
+
+  // Calculate comprehensive score for brew sessions
+  const calculateBrewScore = (session) => {
+    // Use overall score if available
+    if (session.score && session.score > 0) {
+      return session.score;
+    }
+    
+    // Otherwise calculate from tasting notes (bitterness is negative, others positive)
+    const tastingNotes = [
+      session.sweetness,
+      session.acidity,
+      session.body,
+      session.aroma,
+      session.flavor_profile_match
+    ].filter(score => score && score > 0);
+    
+    // Bitterness is subtracted (inverted)
+    const bitternessScore = session.bitterness ? (10 - session.bitterness) : 0;
+    if (bitternessScore > 0) tastingNotes.push(bitternessScore);
+    
+    return tastingNotes.length > 0 ? tastingNotes.reduce((sum, score) => sum + score, 0) / tastingNotes.length : 0;
+  };
+
+  // Get top 5 brew sessions
+  const getTopBrewSessions = () => {
+    return brewSessions
+      .filter(session => calculateBrewScore(session) > 0)
+      .sort((a, b) => calculateBrewScore(b) - calculateBrewScore(a))
+      .slice(0, 5);
+  };
+
+  // Get bottom 5 brew sessions
+  const getBottomBrewSessions = () => {
+    return brewSessions
+      .filter(session => calculateBrewScore(session) > 0)
+      .sort((a, b) => calculateBrewScore(a) - calculateBrewScore(b))
+      .slice(0, 5);
+  };
+
+  // Format seconds to minutes:seconds
+  const formatSecondsToMinSec = (seconds) => {
+    if (!seconds) return 'N/A';
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    if (minutes > 0) {
+      return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+    }
+    return `${seconds}s`;
+  };
+
+
+  // Calculate average tasting notes for radar chart
+  const getTastingAverages = () => {
+    if (brewSessions.length === 0) return null;
+    
+    const validSessions = brewSessions.filter(session => 
+      session.sweetness || session.acidity || session.bitterness || session.body || session.aroma
+    );
+    
+    if (validSessions.length === 0) return null;
+    
+    const totals = {
+      sweetness: 0,
+      acidity: 0,
+      bitterness: 0,
+      body: 0,
+      aroma: 0
+    };
+    
+    const counts = {
+      sweetness: 0,
+      acidity: 0,
+      bitterness: 0,
+      body: 0,
+      aroma: 0
+    };
+    
+    validSessions.forEach(session => {
+      ['sweetness', 'acidity', 'bitterness', 'body', 'aroma'].forEach(attribute => {
+        if (session[attribute] && session[attribute] > 0) {
+          totals[attribute] += session[attribute];
+          counts[attribute]++;
+        }
+      });
+    });
+    
+    return {
+      sweetness: counts.sweetness > 0 ? totals.sweetness / counts.sweetness : 0,
+      acidity: counts.acidity > 0 ? totals.acidity / counts.acidity : 0,
+      bitterness: counts.bitterness > 0 ? totals.bitterness / counts.bitterness : 0,
+      body: counts.body > 0 ? totals.body / counts.body : 0,
+      aroma: counts.aroma > 0 ? totals.aroma / counts.aroma : 0,
+      sessionCount: validSessions.length
+    };
+  };
+
+  // Radar Chart Component
+  const RadarChart = ({ data }) => {
+    if (!data) return null;
+    
+    const size = 200;
+    const center = size / 2;
+    const maxRadius = 80;
+    const angles = [0, 72, 144, 216, 288]; // 5 points, 72 degrees apart
+    const labels = ['Sweetness', 'Acidity', 'Body', 'Aroma', 'Bitterness'];
+    const values = [data.sweetness, data.acidity, data.body, data.aroma, data.bitterness];
+    
+    // Convert polar coordinates to cartesian
+    const getPoint = (angle, radius) => {
+      const radians = (angle - 90) * Math.PI / 180; // -90 to start at top
+      return {
+        x: center + radius * Math.cos(radians),
+        y: center + radius * Math.sin(radians)
+      };
+    };
+    
+    // Generate grid circles
+    const gridCircles = [2, 4, 6, 8, 10].map(level => (
+      <circle
+        key={level}
+        cx={center}
+        cy={center}
+        r={(level / 10) * maxRadius}
+        fill="none"
+        stroke="#e0e0e0"
+        strokeWidth="1"
+      />
+    ));
+    
+    // Generate axis lines
+    const axisLines = angles.map((angle, index) => {
+      const point = getPoint(angle, maxRadius);
+      return (
+        <line
+          key={index}
+          x1={center}
+          y1={center}
+          x2={point.x}
+          y2={point.y}
+          stroke="#e0e0e0"
+          strokeWidth="1"
+        />
+      );
+    });
+    
+    // Generate data polygon
+    const dataPoints = values.map((value, index) => {
+      const radius = (value / 10) * maxRadius;
+      return getPoint(angles[index], radius);
+    });
+    
+    const polygonPoints = dataPoints.map(point => `${point.x},${point.y}`).join(' ');
+    
+    // Generate labels
+    const labelElements = labels.map((label, index) => {
+      const point = getPoint(angles[index], maxRadius + 20);
+      return (
+        <text
+          key={index}
+          x={point.x}
+          y={point.y}
+          textAnchor="middle"
+          dominantBaseline="middle"
+          fontSize="11"
+          fill="#666"
+        >
+          {label}
+        </text>
+      );
+    });
+    
+    return (
+      <div style={{ textAlign: 'center' }}>
+        <h4 style={{ margin: '0 0 10px 0', fontSize: '14px' }}>
+          Tasting Profile ({data.sessionCount} sessions)
+        </h4>
+        <svg width={size + 40} height={size + 40} viewBox={`0 0 ${size + 40} ${size + 40}`}>
+          <g transform="translate(20, 20)">
+            {gridCircles}
+            {axisLines}
+            <polygon
+              points={polygonPoints}
+              fill="rgba(54, 162, 235, 0.2)"
+              stroke="rgba(54, 162, 235, 0.8)"
+              strokeWidth="2"
+            />
+            {dataPoints.map((point, index) => (
+              <circle
+                key={index}
+                cx={point.x}
+                cy={point.y}
+                r="3"
+                fill="rgba(54, 162, 235, 0.8)"
+              />
+            ))}
+            {labelElements}
+          </g>
+        </svg>
+      </div>
+    );
   };
 
   console.log('Render state:', { loading, error, product });
@@ -362,6 +582,56 @@ function ProductDetail() {
         )}
       </div>
 
+      {/* Brew Analytics Section */}
+      {brewSessions.length > 0 && (
+        <div style={{ marginTop: '40px' }}>
+          {/* Top 5 Brews */}
+          <BrewSessionTable 
+            sessions={getTopBrewSessions()} 
+            title="🏆 Top 5 Brews"
+            showProduct={false}
+            showActions={false}
+            showFilters={false}
+            showAddButton={false}
+            onDelete={() => {}}
+            onDuplicate={() => {}}
+            onEdit={() => {}}
+          />
+
+          {/* Bottom 5 Brews */}
+          <BrewSessionTable 
+            sessions={getBottomBrewSessions()} 
+            title="💩 Bottom 5 Brews"
+            showProduct={false}
+            showActions={false}
+            showFilters={false}
+            showAddButton={false}
+            onDelete={() => {}}
+            onDuplicate={() => {}}
+            onEdit={() => {}}
+          />
+
+          {/* Radar Chart */}
+          <div style={{ 
+            padding: '20px', 
+            borderRadius: '8px',
+            border: '1px solid #ddd',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            marginBottom: '30px'
+          }}>
+            <h3 style={{ margin: '0 0 15px 0', textAlign: 'center' }}>📊 Flavor Profile</h3>
+            {getTastingAverages() ? (
+              <RadarChart data={getTastingAverages()} />
+            ) : (
+              <p style={{ color: '#666', fontStyle: 'italic', textAlign: 'center' }}>
+                No tasting notes recorded yet
+              </p>
+            )}
+          </div>
+        </div>
+      )}
 
     </div>
   );

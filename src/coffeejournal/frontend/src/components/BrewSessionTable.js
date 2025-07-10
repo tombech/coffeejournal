@@ -1,8 +1,37 @@
 import React, { useState, useMemo } from 'react';
 import { API_BASE_URL } from '../config';
 
-function BrewSessionTable({ sessions, onDelete, onDuplicate, onEdit, onRefresh, showNewForm, setShowNewForm, setEditingSession }) {
+function BrewSessionTable({ sessions, onDelete, onDuplicate, onEdit, onRefresh, showNewForm, setShowNewForm, setEditingSession, showActions = true, showFilters = true, showAddButton = true, showProduct = true, title = null }) {
   
+  // Calculate comprehensive score for brew sessions
+  const calculateBrewScore = (session) => {
+    // Use overall score if available
+    if (session.score && session.score > 0) {
+      return session.score;
+    }
+    
+    // Otherwise calculate from tasting notes (bitterness is negative, others positive)
+    const tastingNotes = [
+      session.sweetness,
+      session.acidity,
+      session.body,
+      session.aroma,
+      session.flavor_profile_match
+    ].filter(score => score && score > 0);
+    
+    // Bitterness is subtracted (inverted)
+    const bitternessScore = session.bitterness ? (10 - session.bitterness) : 0;
+    if (bitternessScore > 0) tastingNotes.push(bitternessScore);
+    
+    return tastingNotes.length > 0 ? tastingNotes.reduce((sum, score) => sum + score, 0) / tastingNotes.length : 0;
+  };
+
+  // Add calculated score to sessions
+  const sessionsWithScore = sessions.map(session => ({
+    ...session,
+    calculatedScore: calculateBrewScore(session)
+  }));
+
   // Function to get short name for lookup items
   const getShortName = (fullName) => {
     if (!fullName) return '';
@@ -77,21 +106,21 @@ function BrewSessionTable({ sessions, onDelete, onDuplicate, onEdit, onRefresh, 
   // Get unique values for filter dropdowns
   const uniqueValues = useMemo(() => {
     const values = {
-      roasters: [...new Set(sessions.map(s => s.product_details?.roaster).filter(Boolean))],
-      bean_types: [...new Set(sessions.map(s => {
+      roasters: [...new Set(sessionsWithScore.map(s => s.product_details?.roaster).filter(Boolean))],
+      bean_types: [...new Set(sessionsWithScore.map(s => {
         const beanType = s.product_details?.bean_type;
         return Array.isArray(beanType) ? beanType : (beanType ? [beanType] : []);
       }).flat().filter(Boolean))],
-      brew_methods: [...new Set(sessions.map(s => s.brew_method).filter(Boolean))],
-      recipes: [...new Set(sessions.map(s => s.recipe).filter(Boolean))],
-      filters: [...new Set(sessions.map(s => s.filter).filter(Boolean))]
+      brew_methods: [...new Set(sessionsWithScore.map(s => s.brew_method).filter(Boolean))],
+      recipes: [...new Set(sessionsWithScore.map(s => s.recipe).filter(Boolean))],
+      filters: [...new Set(sessionsWithScore.map(s => s.filter).filter(Boolean))]
     };
     return values;
-  }, [sessions]);
+  }, [sessionsWithScore]);
 
   // Filter and sort sessions
   const filteredAndSortedSessions = useMemo(() => {
-    let filtered = sessions.filter(session => {
+    let filtered = sessionsWithScore.filter(session => {
       return (
         (!filters.roaster || session.product_details?.roaster?.toLowerCase().includes(filters.roaster.toLowerCase())) &&
         (!filters.bean_type || (
@@ -129,6 +158,9 @@ function BrewSessionTable({ sessions, onDelete, onDuplicate, onEdit, onRefresh, 
       } else if (sortColumn === 'timestamp') {
         aVal = new Date(a.timestamp);
         bVal = new Date(b.timestamp);
+      } else if (sortColumn === 'calculatedScore') {
+        aVal = a.calculatedScore;
+        bVal = b.calculatedScore;
       }
 
       // Handle null/undefined values
@@ -141,7 +173,7 @@ function BrewSessionTable({ sessions, onDelete, onDuplicate, onEdit, onRefresh, 
       if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1;
       return 0;
     });
-  }, [sessions, filters, sortColumn, sortDirection]);
+  }, [sessionsWithScore, filters, sortColumn, sortDirection]);
 
   const handleSort = (column) => {
     if (sortColumn === column) {
@@ -207,7 +239,9 @@ function BrewSessionTable({ sessions, onDelete, onDuplicate, onEdit, onRefresh, 
 
   return (
     <div className="brew-session-table-container">
+      {title && <h3>{title}</h3>}
       {/* Filter Controls */}
+      {showFilters && (
       <div className="filter-controls" style={{ marginBottom: '15px', padding: '8px', backgroundColor: '#f5f5f5', borderRadius: '5px' }}>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', alignItems: 'center' }}>
           <select value={filters.roaster} onChange={(e) => handleFilterChange('roaster', e.target.value)}>
@@ -253,6 +287,7 @@ function BrewSessionTable({ sessions, onDelete, onDuplicate, onEdit, onRefresh, 
             🗑️
           </button>
           
+          {showAddButton && (
           <button 
             onClick={() => {
               setShowNewForm(!showNewForm);
@@ -263,18 +298,24 @@ function BrewSessionTable({ sessions, onDelete, onDuplicate, onEdit, onRefresh, 
           >
             {showNewForm ? '❌' : '➕'}
           </button>
+          )}
         </div>
       </div>
+      )}
 
       {/* Table */}
       <div>
         <table style={{ borderCollapse: 'collapse', fontSize: '12px', whiteSpace: 'nowrap' }}>
           <thead>
             <tr style={{ backgroundColor: '#e9ecef' }}>
+              {showActions && (
               <th style={{ padding: '4px', border: '1px solid #ddd', width: '110px', fontSize: '12px', textAlign: 'left' }}>Actions</th>
+              )}
+              {showProduct && (
               <th style={{ padding: '4px', border: '1px solid #ddd', fontSize: '12px', whiteSpace: 'nowrap', textAlign: 'left' }}>
                 {createIconHeader('🫘', 'Product', 'product_name', () => handleSort('product_name'))}
               </th>
+              )}
               <th style={{ padding: '4px', border: '1px solid #ddd', fontSize: '12px', whiteSpace: 'nowrap', textAlign: 'left' }}>
                 {createIconHeader('📅', 'Date', 'timestamp', () => handleSort('timestamp'))}
               </th>
@@ -327,7 +368,7 @@ function BrewSessionTable({ sessions, onDelete, onDuplicate, onEdit, onRefresh, 
                 🔧
               </th>
               <th style={{ padding: '4px', border: '1px solid #ddd', fontSize: '12px', whiteSpace: 'nowrap', textAlign: 'left' }}>
-                {createIconHeader('⭐', 'Score', 'score', () => handleSort('score'))}
+                {createIconHeader('⭐', 'Score', 'calculatedScore', () => handleSort('calculatedScore'))}
               </th>
               <th style={{ padding: '4px', border: '1px solid #ddd', fontSize: '12px', whiteSpace: 'nowrap', textAlign: 'left' }} title="Notes">
                 📝
@@ -337,6 +378,7 @@ function BrewSessionTable({ sessions, onDelete, onDuplicate, onEdit, onRefresh, 
           <tbody>
             {filteredAndSortedSessions.map(session => (
               <tr key={session.id} style={{ '&:hover': { backgroundColor: '#f8f9fa' } }}>
+                {showActions && (
                 <td style={{ padding: '2px', border: '1px solid #ddd', textAlign: 'center', fontSize: '11px', width: '110px', whiteSpace: 'nowrap' }}>
                   <button 
                     onClick={() => onEdit(session)}
@@ -360,6 +402,8 @@ function BrewSessionTable({ sessions, onDelete, onDuplicate, onEdit, onRefresh, 
                     🗑️
                   </button>
                 </td>
+                )}
+                {showProduct && (
                 <td 
                   style={{ 
                     padding: '4px', 
@@ -377,6 +421,7 @@ function BrewSessionTable({ sessions, onDelete, onDuplicate, onEdit, onRefresh, 
                   {session.product_details?.product_name || '-'}
                   {isDecafProduct(session) && <span style={{ marginLeft: '4px', color: '#ff6b35' }} title="Decaf Product">D</span>}
                 </td>
+                )}
                 <td 
                   style={{ padding: '4px', border: '1px solid #ddd', fontSize: '12px', cursor: 'help', verticalAlign: 'top' }}
                   title={`Full date/time: ${formatDateTime(session.timestamp)}`}
@@ -417,7 +462,9 @@ function BrewSessionTable({ sessions, onDelete, onDuplicate, onEdit, onRefresh, 
                   {session.grinder ? getShortName(session.grinder) : '-'}
                 </td>
                 <td style={{ padding: '4px', border: '1px solid #ddd', fontSize: '12px', verticalAlign: 'top', whiteSpace: 'nowrap' }}>{session.grinder_setting || '-'}</td>
-                <td style={{ padding: '4px', border: '1px solid #ddd', fontSize: '12px', textAlign: 'center', verticalAlign: 'top', whiteSpace: 'nowrap' }}>{session.score || '-'}</td>
+                <td style={{ padding: '4px', border: '1px solid #ddd', fontSize: '12px', textAlign: 'center', verticalAlign: 'top', whiteSpace: 'nowrap', fontWeight: 'bold' }}>
+                  {session.calculatedScore > 0 ? session.calculatedScore.toFixed(1) : '-'}
+                </td>
                 <td 
                   style={{ 
                     padding: '4px', 
