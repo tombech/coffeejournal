@@ -102,7 +102,9 @@ function BatchForm({ productId, initialData, onBatchSubmitted, onCancel }) {
       const amount = Number(formData.amount_grams);
       if (!isNaN(price) && !isNaN(amount) && amount > 0) {
         const cupsPerBatch = amount / 18.0; // 18g per cup
-        return (price / cupsPerBatch).toFixed(2);
+        if (cupsPerBatch > 0) {
+          return (price / cupsPerBatch).toFixed(2);
+        }
       }
     }
     return null;

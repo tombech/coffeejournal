@@ -439,7 +439,7 @@ function Home() {
                       fontWeight: 'bold',
                       boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
                     }}>
-                      {item.averageScore.toFixed(1)}
+                      {typeof item.averageScore === 'number' ? item.averageScore.toFixed(1) : '0.0'}
                     </div>
 
                     {/* Left side - Product Info */}

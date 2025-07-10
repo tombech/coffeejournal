@@ -47,7 +47,7 @@ function BrewSessionCard({ session, onDelete, onDuplicate }) {
   return (
     <div className="card">
       <h3>Brew Session - {new Date(session.timestamp).toLocaleString('nb-NO')}</h3>
-      <p><strong>Product:</strong> {session.product_details.roaster} - {Array.isArray(session.product_details.bean_type) ? session.product_details.bean_type.join(', ') : (session.product_details.bean_type || 'Unknown')} (Roast: {formatDateNorwegian(session.product_details.roast_date)})</p>
+      <p><strong>Product:</strong> {session.product_details?.roaster || 'Unknown'} - {Array.isArray(session.product_details?.bean_type) ? session.product_details.bean_type.join(', ') : (session.product_details?.bean_type || 'Unknown')} (Roast: {formatDateNorwegian(session.product_details?.roast_date)})</p>
       <p><strong>Method:</strong> {session.brew_method || 'N/A'} - <strong>Recipe:</strong> {session.recipe || 'N/A'}</p>
       <p><strong>Equipment:</strong> Filter: {session.filter || 'N/A'}, Kettle: {session.kettle || 'N/A'}, Scale: {session.scale || 'N/A'}</p>
       <p>

@@ -125,7 +125,7 @@ function BrewSessionTable({ sessions, onDelete, onDuplicate, onEdit, onRefresh, 
         (!filters.roaster || session.product_details?.roaster?.toLowerCase().includes(filters.roaster.toLowerCase())) &&
         (!filters.bean_type || (
           Array.isArray(session.product_details?.bean_type) 
-            ? session.product_details.bean_type.some(bt => bt.toLowerCase().includes(filters.bean_type.toLowerCase()))
+            ? session.product_details?.bean_type.some(bt => bt.toLowerCase().includes(filters.bean_type.toLowerCase()))
             : session.product_details?.bean_type?.toLowerCase().includes(filters.bean_type.toLowerCase())
         )) &&
         (!filters.brew_method || session.brew_method?.toLowerCase().includes(filters.brew_method.toLowerCase())) &&
@@ -147,10 +147,10 @@ function BrewSessionTable({ sessions, onDelete, onDuplicate, onEdit, onRefresh, 
       // Handle special cases
       if (sortColumn === 'bean_type') {
         aVal = Array.isArray(a.product_details?.bean_type) 
-          ? a.product_details.bean_type.join(', ') 
+          ? a.product_details?.bean_type.join(', ') 
           : (a.product_details?.bean_type || '');
         bVal = Array.isArray(b.product_details?.bean_type) 
-          ? b.product_details.bean_type.join(', ') 
+          ? b.product_details?.bean_type.join(', ') 
           : (b.product_details?.bean_type || '');
       } else if (sortColumn === 'product_name') {
         aVal = a.product_details?.product_name || '';
@@ -416,7 +416,7 @@ function BrewSessionTable({ sessions, onDelete, onDuplicate, onEdit, onRefresh, 
                     maxWidth: '200px',
                     verticalAlign: 'top'
                   }}
-                  title={`${session.product_details?.product_name || 'Unknown'}\n\nBean Type: ${Array.isArray(session.product_details?.bean_type) ? session.product_details.bean_type.join(', ') : (session.product_details?.bean_type || 'Unknown')}\nRoaster: ${session.product_details?.roaster || 'Unknown'}\nRoast Date: ${session.product_details?.roast_date ? formatDateNorwegian(session.product_details.roast_date) : 'Unknown'}${isDecafProduct(session) ? '\n\n⚠️ DECAF PRODUCT' : ''}`}
+                  title={`${session.product_details?.product_name || 'Unknown'}\n\nBean Type: ${Array.isArray(session.product_details?.bean_type) ? session.product_details?.bean_type.join(', ') : (session.product_details?.bean_type || 'Unknown')}\nRoaster: ${session.product_details?.roaster || 'Unknown'}\nRoast Date: ${session.product_details?.roast_date ? formatDateNorwegian(session.product_details?.roast_date) : 'Unknown'}${isDecafProduct(session) ? '\n\n⚠️ DECAF PRODUCT' : ''}`}
                 >
                   {session.product_details?.product_name || '-'}
                   {isDecafProduct(session) && <span style={{ marginLeft: '4px', color: '#ff6b35' }} title="Decaf Product">D</span>}
@@ -463,7 +463,7 @@ function BrewSessionTable({ sessions, onDelete, onDuplicate, onEdit, onRefresh, 
                 </td>
                 <td style={{ padding: '4px', border: '1px solid #ddd', fontSize: '12px', verticalAlign: 'top', whiteSpace: 'nowrap' }}>{session.grinder_setting || '-'}</td>
                 <td style={{ padding: '4px', border: '1px solid #ddd', fontSize: '12px', textAlign: 'center', verticalAlign: 'top', whiteSpace: 'nowrap', fontWeight: 'bold' }}>
-                  {session.calculatedScore > 0 ? session.calculatedScore.toFixed(1) : '-'}
+                  {(typeof session.calculatedScore === 'number' && session.calculatedScore > 0) ? session.calculatedScore.toFixed(1) : '-'}
                 </td>
                 <td 
                   style={{ 

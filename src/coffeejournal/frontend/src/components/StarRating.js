@@ -91,7 +91,7 @@ function StarRating({ rating, onRatingChange, readOnly = false, maxRating = 5, s
       {Array.from({ length: maxRating }, (_, index) => renderStar(index))}
       {rating && (
         <span style={{ marginLeft: '8px', fontSize: '14px', color: '#666' }}>
-          {rating.toFixed(1)}
+          {typeof rating === 'number' ? rating.toFixed(1) : '0.0'}
         </span>
       )}
     </div>
