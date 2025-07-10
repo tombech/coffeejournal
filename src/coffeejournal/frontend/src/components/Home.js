@@ -196,7 +196,7 @@ function Home() {
           averages
         };
       })
-      .filter(item => item.product && item.sessionCount >= 2) // At least 2 sessions
+      .filter(item => item.product && item.sessionCount >= 1) // At least 1 session
       .sort((a, b) => b.averageScore - a.averageScore)
       .slice(0, 5);
   };
@@ -460,7 +460,7 @@ function Home() {
                 ))}
               </div>
             ) : (
-              <p style={{ color: '#666', fontStyle: 'italic' }}>No products with enough sessions yet (minimum 2 sessions required)</p>
+              <p style={{ color: '#666', fontStyle: 'italic' }}>No products with scored sessions yet</p>
             )}
           </div>
         </div>
