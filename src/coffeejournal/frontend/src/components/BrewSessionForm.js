@@ -197,219 +197,456 @@ function BrewSessionForm({ product_batch_id = null, onSessionSubmitted, initialD
   if (error) return <p className="error-message">{error}</p>;
 
   return (
-    <form onSubmit={handleSubmit}>
+    <form onSubmit={handleSubmit} style={{ maxWidth: '1200px' }}>
       <h4>{isEditMode ? 'Edit Brew Session' : 'Add New Brew Session'}</h4>
-      <label>
-        Timestamp:
-        <DateTimeInput
-          name="timestamp"
-          value={formData.timestamp}
-          onChange={handleChange}
-          required
-        />
-      </label>
       
-      {/* Product and Batch selection - show if not tied to a specific batch OR if editing */}
-      {(!product_batch_id || isEditMode) && (
-        <>
-          <label>
-            Product:
-            <select
-              name="product_id"
-              value={formData.product_id}
-              onChange={handleChange}
-              required
-            >
-              <option value="">Select a product</option>
-              {products.map((product) => (
-                <option key={product.id} value={product.id}>
-                  {product.roaster} - {product.product_name}
-                </option>
-              ))}
-            </select>
+      {/* Basic Info Section */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+        gap: '12px',
+        marginBottom: '16px'
+      }}>
+        <div>
+          <label style={{ fontSize: '12px', fontWeight: 'bold', display: 'block', marginBottom: '4px' }}>
+            Timestamp
           </label>
-          
-          <label>
-            Batch:
-            <select
-              name="product_batch_id"
-              value={formData.product_batch_id}
-              onChange={handleChange}
-              required
-              disabled={!formData.product_id}
-            >
-              <option value="">Select a batch</option>
-              {batches.map((batch) => (
-                <option key={batch.id} value={batch.id}>
-                  Roast Date: {formatDateNorwegian(batch.roast_date)} ({batch.amount_grams}g)
-                </option>
-              ))}
-            </select>
+          <DateTimeInput
+            name="timestamp"
+            value={formData.timestamp}
+            onChange={handleChange}
+            required
+            style={{ width: '100%', fontSize: '14px', padding: '6px', height: '32px', boxSizing: 'border-box' }}
+          />
+        </div>
+        
+        {/* Product and Batch selection - show if not tied to a specific batch OR if editing */}
+        {(!product_batch_id || isEditMode) && (
+          <>
+            <div>
+              <label style={{ fontSize: '12px', fontWeight: 'bold', display: 'block', marginBottom: '4px' }}>
+                Product
+              </label>
+              <select
+                name="product_id"
+                value={formData.product_id}
+                onChange={handleChange}
+                required
+                style={{ width: '100%', fontSize: '14px', padding: '6px', height: '32px', boxSizing: 'border-box' }}
+              >
+                <option value="">Select a product</option>
+                {products.map((product) => (
+                  <option key={product.id} value={product.id}>
+                    {product.product_name} ({product.roaster})
+                  </option>
+                ))}
+              </select>
+            </div>
+            
+            <div>
+              <label style={{ fontSize: '12px', fontWeight: 'bold', display: 'block', marginBottom: '4px' }}>
+                Batch
+              </label>
+              <select
+                name="product_batch_id"
+                value={formData.product_batch_id}
+                onChange={handleChange}
+                required
+                disabled={!formData.product_id}
+                style={{ width: '100%', fontSize: '14px', padding: '6px', height: '32px', boxSizing: 'border-box' }}
+              >
+                <option value="">Select a batch</option>
+                {batches.map((batch) => (
+                  <option key={batch.id} value={batch.id}>
+                    Roast Date: {formatDateNorwegian(batch.roast_date)} ({batch.amount_grams}g)
+                  </option>
+                ))}
+              </select>
+            </div>
+          </>
+        )}
+      </div>
+
+      {/* Equipment Section */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
+        gap: '8px',
+        marginBottom: '16px',
+        padding: '12px',
+        backgroundColor: '#f8f9fa',
+        borderRadius: '4px'
+      }}>
+        <div>
+          <label style={{ fontSize: '12px', fontWeight: 'bold', display: 'block', marginBottom: '4px' }}>
+            Method *
           </label>
-        </>
-      )}
-      
-      <label>
-        Brew Method:
-        <input
-          type="text"
-          name="brew_method"
-          value={formData.brew_method}
-          onChange={handleChange}
-          list="brewMethodsOptions"
-          data-list="brewMethodsOptions"
-          onFocus={handleMobileDatalistFocus}
-          onBlur={handleMobileDatalistBlur}
-          required
-        />
-        <datalist id="brewMethodsOptions">
-          {brewMethods.map((bm) => (
-            <option key={bm.id} value={bm.name} />
-          ))}
-        </datalist>
-      </label>
-      <label>
-        Recipe:
-        <input
-          type="text"
-          name="recipe"
-          value={formData.recipe}
-          onChange={handleChange}
-          list="recipesOptions"
-          data-list="recipesOptions"
-          onFocus={handleMobileDatalistFocus}
-          onBlur={handleMobileDatalistBlur}
-        />
-        <datalist id="recipesOptions">
-          {recipes.map((r) => (
-            <option key={r.id} value={r.name} />
-          ))}
-        </datalist>
-      </label>
-      <label>
-        Grinder:
-        <input
-          type="text"
-          name="grinder"
-          value={formData.grinder}
-          onChange={handleChange}
-          list="grindersOptions"
-          data-list="grindersOptions"
-          onFocus={handleMobileDatalistFocus}
-          onBlur={handleMobileDatalistBlur}
-        />
-        <datalist id="grindersOptions">
-          {grinders.map((g) => (
-            <option key={g.id} value={g.name} />
-          ))}
-        </datalist>
-      </label>
-      <label>
-        Grinder Setting:
-        <input type="text" name="grinder_setting" value={formData.grinder_setting} onChange={handleChange} />
-      </label>
-      <label>
-        Filter:
-        <input
-          type="text"
-          name="filter"
-          value={formData.filter}
-          onChange={handleChange}
-          list="filtersOptions"
-          data-list="filtersOptions"
-          onFocus={handleMobileDatalistFocus}
-          onBlur={handleMobileDatalistBlur}
-        />
-        <datalist id="filtersOptions">
-          {filters.map((f) => (
-            <option key={f.id} value={f.name} />
-          ))}
-        </datalist>
-      </label>
-      <label>
-        Kettle:
-        <input
-          type="text"
-          name="kettle"
-          value={formData.kettle}
-          onChange={handleChange}
-          list="kettlesOptions"
-          data-list="kettlesOptions"
-          onFocus={handleMobileDatalistFocus}
-          onBlur={handleMobileDatalistBlur}
-        />
-        <datalist id="kettlesOptions">
-          {kettles.map((k) => (
-            <option key={k.id} value={k.name} />
-          ))}
-        </datalist>
-      </label>
-      <label>
-        Scale:
-        <input
-          type="text"
-          name="scale"
-          value={formData.scale}
-          onChange={handleChange}
-          list="scalesOptions"
-          data-list="scalesOptions"
-          onFocus={handleMobileDatalistFocus}
-          onBlur={handleMobileDatalistBlur}
-        />
-        <datalist id="scalesOptions">
-          {scales.map((s) => (
-            <option key={s.id} value={s.name} />
-          ))}
-        </datalist>
-      </label>
-      <label>
-        Coffee Amount (grams):
-        <input type="number" name="amount_coffee_grams" value={formData.amount_coffee_grams} onChange={handleChange} step="0.1" required />
-      </label>
-      <label>
-        Water Amount (grams):
-        <input type="number" name="amount_water_grams" value={formData.amount_water_grams} onChange={handleChange} step="0.1" required />
-      </label>
-      <label>
-        Brew Temperature (C):
-        <input type="number" name="brew_temperature_c" value={formData.brew_temperature_c} onChange={handleChange} step="0.1" />
-      </label>
-      {/* --- REMOVED brew_ratio input --- */}
-      <label>
-        Bloom Time:
-        <TimeInput 
-          name="bloom_time_seconds" 
-          value={formData.bloom_time_seconds} 
+          <input
+            type="text"
+            name="brew_method"
+            value={formData.brew_method}
+            onChange={handleChange}
+            list="brewMethodsOptions"
+            data-list="brewMethodsOptions"
+            onFocus={handleMobileDatalistFocus}
+            onBlur={handleMobileDatalistBlur}
+            required
+            placeholder="e.g., V60, Chemex, French Press"
+            style={{ width: '100%', fontSize: '14px', padding: '6px', height: '32px', boxSizing: 'border-box' }}
+          />
+          <datalist id="brewMethodsOptions">
+            {brewMethods.map((bm) => (
+              <option key={bm.id} value={bm.name} />
+            ))}
+          </datalist>
+        </div>
+        
+        <div>
+          <label style={{ fontSize: '12px', fontWeight: 'bold', display: 'block', marginBottom: '4px' }}>
+            Recipe
+          </label>
+          <input
+            type="text"
+            name="recipe"
+            value={formData.recipe}
+            onChange={handleChange}
+            list="recipesOptions"
+            data-list="recipesOptions"
+            onFocus={handleMobileDatalistFocus}
+            onBlur={handleMobileDatalistBlur}
+            placeholder="e.g., James Hoffmann V60"
+            style={{ width: '100%', fontSize: '14px', padding: '6px', height: '32px', boxSizing: 'border-box' }}
+          />
+          <datalist id="recipesOptions">
+            {recipes.map((r) => (
+              <option key={r.id} value={r.name} />
+            ))}
+          </datalist>
+        </div>
+        
+        <div>
+          <label style={{ fontSize: '12px', fontWeight: 'bold', display: 'block', marginBottom: '4px' }}>
+            Grinder
+          </label>
+          <input
+            type="text"
+            name="grinder"
+            value={formData.grinder}
+            onChange={handleChange}
+            list="grindersOptions"
+            data-list="grindersOptions"
+            onFocus={handleMobileDatalistFocus}
+            onBlur={handleMobileDatalistBlur}
+            placeholder="e.g., Comandante, Wilfa Uniform"
+            style={{ width: '100%', fontSize: '14px', padding: '6px', height: '32px', boxSizing: 'border-box' }}
+          />
+          <datalist id="grindersOptions">
+            {grinders.map((g) => (
+              <option key={g.id} value={g.name} />
+            ))}
+          </datalist>
+        </div>
+        
+        <div>
+          <label style={{ fontSize: '12px', fontWeight: 'bold', display: 'block', marginBottom: '4px' }}>
+            Setting
+          </label>
+          <input 
+            type="text" 
+            name="grinder_setting" 
+            value={formData.grinder_setting} 
+            onChange={handleChange}
+            placeholder="e.g., 15, Medium-Fine"
+            style={{ width: '100%', fontSize: '14px', padding: '6px', height: '32px', boxSizing: 'border-box' }}
+          />
+        </div>
+        
+        <div>
+          <label style={{ fontSize: '12px', fontWeight: 'bold', display: 'block', marginBottom: '4px' }}>
+            Filter
+          </label>
+          <input
+            type="text"
+            name="filter"
+            value={formData.filter}
+            onChange={handleChange}
+            list="filtersOptions"
+            data-list="filtersOptions"
+            onFocus={handleMobileDatalistFocus}
+            onBlur={handleMobileDatalistBlur}
+            placeholder="e.g., Hario V60, Paper Filter"
+            style={{ width: '100%', fontSize: '14px', padding: '6px', height: '32px', boxSizing: 'border-box' }}
+          />
+          <datalist id="filtersOptions">
+            {filters.map((f) => (
+              <option key={f.id} value={f.name} />
+            ))}
+          </datalist>
+        </div>
+        
+        <div>
+          <label style={{ fontSize: '12px', fontWeight: 'bold', display: 'block', marginBottom: '4px' }}>
+            Kettle
+          </label>
+          <input
+            type="text"
+            name="kettle"
+            value={formData.kettle}
+            onChange={handleChange}
+            list="kettlesOptions"
+            data-list="kettlesOptions"
+            onFocus={handleMobileDatalistFocus}
+            onBlur={handleMobileDatalistBlur}
+            placeholder="e.g., Hario Buono, Fellow Stagg"
+            style={{ width: '100%', fontSize: '14px', padding: '6px', height: '32px', boxSizing: 'border-box' }}
+          />
+          <datalist id="kettlesOptions">
+            {kettles.map((k) => (
+              <option key={k.id} value={k.name} />
+            ))}
+          </datalist>
+        </div>
+        
+        <div>
+          <label style={{ fontSize: '12px', fontWeight: 'bold', display: 'block', marginBottom: '4px' }}>
+            Scale
+          </label>
+          <input
+            type="text"
+            name="scale"
+            value={formData.scale}
+            onChange={handleChange}
+            list="scalesOptions"
+            data-list="scalesOptions"
+            onFocus={handleMobileDatalistFocus}
+            onBlur={handleMobileDatalistBlur}
+            placeholder="e.g., Acaia Pearl, Hario V60"
+            style={{ width: '100%', fontSize: '14px', padding: '6px', height: '32px', boxSizing: 'border-box' }}
+          />
+          <datalist id="scalesOptions">
+            {scales.map((s) => (
+              <option key={s.id} value={s.name} />
+            ))}
+          </datalist>
+        </div>
+      </div>
+
+      {/* Brewing Parameters Section */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))',
+        gap: '8px',
+        marginBottom: '16px',
+        padding: '12px',
+        backgroundColor: '#e8f4f8',
+        borderRadius: '4px'
+      }}>
+        <div>
+          <label style={{ fontSize: '12px', fontWeight: 'bold', display: 'block', marginBottom: '4px' }}>
+            Coffee (g) *
+          </label>
+          <input 
+            type="number" 
+            name="amount_coffee_grams" 
+            value={formData.amount_coffee_grams} 
+            onChange={handleChange} 
+            step="0.1" 
+            required
+            placeholder="18"
+            style={{ width: '100%', fontSize: '14px', padding: '6px', height: '32px', boxSizing: 'border-box' }}
+          />
+        </div>
+        
+        <div>
+          <label style={{ fontSize: '12px', fontWeight: 'bold', display: 'block', marginBottom: '4px' }}>
+            Water (g) *
+          </label>
+          <input 
+            type="number" 
+            name="amount_water_grams" 
+            value={formData.amount_water_grams} 
+            onChange={handleChange} 
+            step="0.1" 
+            required
+            placeholder="300"
+            style={{ width: '100%', fontSize: '14px', padding: '6px', height: '32px', boxSizing: 'border-box' }}
+          />
+        </div>
+        
+        <div>
+          <label style={{ fontSize: '12px', fontWeight: 'bold', display: 'block', marginBottom: '4px' }}>
+            Temp (°C)
+          </label>
+          <input 
+            type="number" 
+            name="brew_temperature_c" 
+            value={formData.brew_temperature_c} 
+            onChange={handleChange} 
+            step="0.1"
+            placeholder="93"
+            style={{ width: '100%', fontSize: '14px', padding: '6px', height: '32px', boxSizing: 'border-box' }}
+          />
+        </div>
+        
+        <div>
+          <label style={{ fontSize: '12px', fontWeight: 'bold', display: 'block', marginBottom: '4px' }}>
+            Bloom Time
+          </label>
+          <TimeInput 
+            name="bloom_time_seconds" 
+            value={formData.bloom_time_seconds} 
+            onChange={handleChange} 
+            placeholder="0:30"
+            style={{ width: '100%', fontSize: '14px', padding: '6px', height: '32px', boxSizing: 'border-box' }}
+          />
+        </div>
+        
+        <div>
+          <label style={{ fontSize: '12px', fontWeight: 'bold', display: 'block', marginBottom: '4px' }}>
+            Brew Time
+          </label>
+          <TimeInput 
+            name="brew_time_seconds" 
+            value={formData.brew_time_seconds} 
+            onChange={handleChange} 
+            placeholder="2:30"
+            style={{ width: '100%', fontSize: '14px', padding: '6px', height: '32px', boxSizing: 'border-box' }}
+          />
+        </div>
+      </div>
+
+      {/* Tasting Notes Section */}
+      <div style={{
+        padding: '12px',
+        backgroundColor: '#fff3cd',
+        borderRadius: '4px',
+        marginBottom: '16px'
+      }}>
+        <h5 style={{ margin: '0 0 8px 0', fontSize: '14px' }}>Tasting Notes (1-10)</h5>
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(80px, 1fr))',
+          gap: '8px',
+          marginBottom: '12px'
+        }}>
+          <div>
+            <label style={{ fontSize: '11px', fontWeight: 'bold', display: 'block', marginBottom: '2px' }}>
+              Sweet
+            </label>
+            <input 
+              type="number" 
+              name="sweetness" 
+              value={formData.sweetness} 
+              onChange={handleChange} 
+              min="1" 
+              max="10"
+              style={{ width: '100%', fontSize: '14px', padding: '6px', height: '32px', boxSizing: 'border-box' }}
+            />
+          </div>
+          <div>
+            <label style={{ fontSize: '11px', fontWeight: 'bold', display: 'block', marginBottom: '2px' }}>
+              Acid
+            </label>
+            <input 
+              type="number" 
+              name="acidity" 
+              value={formData.acidity} 
+              onChange={handleChange} 
+              min="1" 
+              max="10"
+              style={{ width: '100%', fontSize: '14px', padding: '6px', height: '32px', boxSizing: 'border-box' }}
+            />
+          </div>
+          <div>
+            <label style={{ fontSize: '11px', fontWeight: 'bold', display: 'block', marginBottom: '2px' }}>
+              Bitter
+            </label>
+            <input 
+              type="number" 
+              name="bitterness" 
+              value={formData.bitterness} 
+              onChange={handleChange} 
+              min="1" 
+              max="10"
+              style={{ width: '100%', fontSize: '14px', padding: '6px', height: '32px', boxSizing: 'border-box' }}
+            />
+          </div>
+          <div>
+            <label style={{ fontSize: '11px', fontWeight: 'bold', display: 'block', marginBottom: '2px' }}>
+              Body
+            </label>
+            <input 
+              type="number" 
+              name="body" 
+              value={formData.body} 
+              onChange={handleChange} 
+              min="1" 
+              max="10"
+              style={{ width: '100%', fontSize: '14px', padding: '6px', height: '32px', boxSizing: 'border-box' }}
+            />
+          </div>
+          <div>
+            <label style={{ fontSize: '11px', fontWeight: 'bold', display: 'block', marginBottom: '2px' }}>
+              Aroma
+            </label>
+            <input 
+              type="number" 
+              name="aroma" 
+              value={formData.aroma} 
+              onChange={handleChange} 
+              min="1" 
+              max="10"
+              style={{ width: '100%', fontSize: '14px', padding: '6px', height: '32px', boxSizing: 'border-box' }}
+            />
+          </div>
+          <div>
+            <label style={{ fontSize: '11px', fontWeight: 'bold', display: 'block', marginBottom: '2px' }}>
+              Profile
+            </label>
+            <input 
+              type="number" 
+              name="flavor_profile_match" 
+              value={formData.flavor_profile_match} 
+              onChange={handleChange} 
+              min="1" 
+              max="10"
+              style={{ width: '100%', fontSize: '14px', padding: '6px', height: '32px', boxSizing: 'border-box' }}
+            />
+          </div>
+        </div>
+        
+        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+          <div>
+            <label style={{ fontSize: '12px', fontWeight: 'bold', display: 'block', marginBottom: '4px' }}>
+              Overall Score (1-10)
+            </label>
+            <input 
+              type="number" 
+              name="score" 
+              value={formData.score} 
+              onChange={handleChange} 
+              min="1" 
+              max="10"
+              style={{ width: '80px', fontSize: '14px', padding: '6px', height: '32px', boxSizing: 'border-box' }}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Notes Section */}
+      <div style={{ marginBottom: '16px' }}>
+        <label style={{ fontSize: '12px', fontWeight: 'bold', display: 'block', marginBottom: '4px' }}>
+          Notes
+        </label>
+        <textarea 
+          name="notes" 
+          value={formData.notes} 
           onChange={handleChange} 
-          placeholder="e.g., 30 or 0:30"
+          rows="3"
+          style={{ width: '100%', fontSize: '14px', padding: '8px', resize: 'vertical' }}
+          placeholder="Tasting notes, observations, adjustments for next time..."
         />
-      </label>
-      <label>
-        Brew Time:
-        <TimeInput 
-          name="brew_time_seconds" 
-          value={formData.brew_time_seconds} 
-          onChange={handleChange} 
-          placeholder="e.g., 150 or 2:30"
-        />
-      </label>
-
-      {/* Flavor Scores */}
-      <h4>Flavor Scores (1-10)</h4>
-      <label>Sweetness: <input type="number" name="sweetness" value={formData.sweetness} onChange={handleChange} min="1" max="10" /></label>
-      <label>Acidity: <input type="number" name="acidity" value={formData.acidity} onChange={handleChange} min="1" max="10" /></label>
-      <label>Bitterness: <input type="number" name="bitterness" value={formData.bitterness} onChange={handleChange} min="1" max="10" /></label>
-      <label>Body: <input type="number" name="body" value={formData.body} onChange={handleChange} min="1" max="10" /></label>
-      <label>Aroma: <input type="number" name="aroma" value={formData.aroma} onChange={handleChange} min="1" max="10" /></label>
-      <label>Flavor Profile Match: <input type="number" name="flavor_profile_match" value={formData.flavor_profile_match} onChange={handleChange} min="1" max="10" /></label>
-
-      <h4>Overall Score (1-10)</h4>
-      <label>Score: <input type="number" name="score" value={formData.score} onChange={handleChange} min="1" max="10" /></label>
-
-      <label>
-        Notes:
-        <textarea name="notes" value={formData.notes} onChange={handleChange} rows="4"></textarea>
-      </label>
+      </div>
 
       <button 
         type="submit" 
