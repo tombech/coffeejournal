@@ -1783,7 +1783,8 @@ def get_all_brew_sessions():
                 'bean_type': product.get('bean_type'),
                 'product_name': product.get('product_name'),
                 'roast_date': batch.get('roast_date') if batch else None,
-                'roast_type': product.get('roast_type')
+                'roast_type': product.get('roast_type'),
+                'decaf': product.get('decaf', False)
             }
         else:
             session['product_details'] = {}
@@ -1849,7 +1850,8 @@ def get_brew_session(session_id):
             'roaster': product.get('roaster'),
             'bean_type': product.get('bean_type'),
             'roast_date': batch.get('roast_date') if batch else None,
-            'roast_type': product.get('roast_type')
+            'roast_type': product.get('roast_type'),
+            'decaf': product.get('decaf', False)
         }
     else:
         session['product_details'] = {}
@@ -2008,7 +2010,8 @@ def update_brew_session(session_id):
         'bean_type': product.get('bean_type'),
         'product_name': product.get('product_name'),
         'roast_date': batch.get('roast_date'),
-        'roast_type': product.get('roast_type')
+        'roast_type': product.get('roast_type'),
+        'decaf': product.get('decaf', False)
     }
     
     return jsonify(session)

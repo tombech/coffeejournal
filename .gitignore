@@ -194,6 +194,7 @@ Thumbs.db
 
 # Claude Code specific
 .claude/
+CLAUDE.md
 
 # Backup files
 *.bak

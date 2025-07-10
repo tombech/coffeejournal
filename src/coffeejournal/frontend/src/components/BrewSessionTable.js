@@ -2,6 +2,47 @@ import React, { useState, useMemo } from 'react';
 import { API_BASE_URL } from '../config';
 
 function BrewSessionTable({ sessions, onDelete, onDuplicate, onEdit, onRefresh, showNewForm, setShowNewForm, setEditingSession }) {
+  
+  // Function to get short name for lookup items
+  const getShortName = (fullName) => {
+    if (!fullName) return '';
+    
+    // Predefined short names for common items
+    const shortNameMap = {
+      'V60': 'V60',
+      'Chemex': 'Cmx',
+      'French Press': 'FP',
+      'AeroPress': 'AP',
+      'Espresso': 'Esp',
+      'Pour Over': 'PO',
+      'Cold Brew': 'CB',
+      'Moka Pot': 'MP',
+      'Paper Filter': 'Paper',
+      'Metal Filter': 'Metal',
+      'Hario V60 Paper Filter': 'V60P',
+      'Cafec T90': 'T90',
+      'Swiss water method': 'Swiss',
+      'Wilfa Uniform Evo': 'Wilfa',
+      'Digital Scale': 'Dig',
+      'Acaia Pearl': 'Pearl',
+      'Hario V60 Scale': 'V60S'
+    };
+    
+    // Return predefined short name if exists
+    if (shortNameMap[fullName]) {
+      return shortNameMap[fullName];
+    }
+    
+    // Generate short name from full name
+    const words = fullName.split(' ');
+    if (words.length === 1) {
+      return words[0].length > 6 ? words[0].substring(0, 6) : words[0];
+    } else if (words.length === 2) {
+      return words.map(w => w.charAt(0)).join('') + words[1].substring(1, 3);
+    } else {
+      return words.map(w => w.charAt(0)).join('').substring(0, 4);
+    }
+  };
   const [sortColumn, setSortColumn] = useState('timestamp');
   const [sortDirection, setSortDirection] = useState('desc'); // newest first by default
   const [filters, setFilters] = useState({
@@ -16,6 +57,22 @@ function BrewSessionTable({ sessions, onDelete, onDuplicate, onEdit, onRefresh, 
     body: '',
     aroma: ''
   });
+  
+  // Function to check if a product is decaf
+  const isDecafProduct = (session) => {
+    return session.product_details?.decaf === true;
+  };
+  
+  // Function to create header with icon and hover text
+  const createIconHeader = (icon, title, column, onClick) => (
+    <span 
+      style={{ cursor: 'pointer', userSelect: 'none', display: 'flex', alignItems: 'center', gap: '2px' }}
+      title={title}
+      onClick={onClick}
+    >
+      {icon}{getSortIcon(column)}
+    </span>
+  );
 
   // Get unique values for filter dropdowns
   const uniqueValues = useMemo(() => {
@@ -215,116 +272,66 @@ function BrewSessionTable({ sessions, onDelete, onDuplicate, onEdit, onRefresh, 
           <thead>
             <tr style={{ backgroundColor: '#e9ecef' }}>
               <th style={{ padding: '4px', border: '1px solid #ddd', width: '110px', fontSize: '12px', textAlign: 'left' }}>Actions</th>
-              <th 
-                style={{ padding: '4px', border: '1px solid #ddd', cursor: 'pointer', userSelect: 'none', fontSize: '12px', whiteSpace: 'nowrap', textAlign: 'left' }}
-                onClick={() => handleSort('product_name')}
-              >
-                Product{getSortIcon('product_name')}
+              <th style={{ padding: '4px', border: '1px solid #ddd', fontSize: '12px', whiteSpace: 'nowrap', textAlign: 'left' }}>
+                {createIconHeader('🫘', 'Product', 'product_name', () => handleSort('product_name'))}
               </th>
-              <th 
-                style={{ padding: '4px', border: '1px solid #ddd', cursor: 'pointer', userSelect: 'none', fontSize: '12px', whiteSpace: 'nowrap', textAlign: 'left' }}
-                onClick={() => handleSort('timestamp')}
-              >
-                Date{getSortIcon('timestamp')}
+              <th style={{ padding: '4px', border: '1px solid #ddd', fontSize: '12px', whiteSpace: 'nowrap', textAlign: 'left' }}>
+                {createIconHeader('📅', 'Date', 'timestamp', () => handleSort('timestamp'))}
               </th>
-              <th 
-                style={{ padding: '4px', border: '1px solid #ddd', cursor: 'pointer', userSelect: 'none', fontSize: '12px', whiteSpace: 'nowrap', textAlign: 'left' }}
-                onClick={() => handleSort('brew_method')}
-              >
-                Method{getSortIcon('brew_method')}
+              <th style={{ padding: '4px', border: '1px solid #ddd', fontSize: '12px', whiteSpace: 'nowrap', textAlign: 'left' }}>
+                {createIconHeader('☕', 'Method', 'brew_method', () => handleSort('brew_method'))}
               </th>
-              <th 
-                style={{ padding: '4px', border: '1px solid #ddd', cursor: 'pointer', userSelect: 'none', fontSize: '12px', whiteSpace: 'nowrap', textAlign: 'left' }}
-                onClick={() => handleSort('recipe')}
-              >
-                Recipe{getSortIcon('recipe')}
+              <th style={{ padding: '4px', border: '1px solid #ddd', fontSize: '12px', whiteSpace: 'nowrap', textAlign: 'left' }}>
+                {createIconHeader('📋', 'Recipe', 'recipe', () => handleSort('recipe'))}
               </th>
-              <th 
-                style={{ padding: '4px', border: '1px solid #ddd', cursor: 'pointer', userSelect: 'none', fontSize: '12px', whiteSpace: 'nowrap', textAlign: 'left' }}
-                onClick={() => handleSort('filter')}
-              >
-                Filter{getSortIcon('filter')}
+              <th style={{ padding: '4px', border: '1px solid #ddd', fontSize: '12px', whiteSpace: 'nowrap', textAlign: 'left' }}>
+                {createIconHeader('📄', 'Filter', 'filter', () => handleSort('filter'))}
               </th>
-              <th 
-                style={{ padding: '4px', border: '1px solid #ddd', cursor: 'pointer', userSelect: 'none', fontSize: '12px', whiteSpace: 'nowrap', textAlign: 'left' }}
-                onClick={() => handleSort('amount_coffee_grams')}
-              >
-                Coffee{getSortIcon('amount_coffee_grams')}
+              <th style={{ padding: '4px', border: '1px solid #ddd', fontSize: '12px', whiteSpace: 'nowrap', textAlign: 'left' }}>
+                {createIconHeader('🫘', 'Coffee (g)', 'amount_coffee_grams', () => handleSort('amount_coffee_grams'))}
               </th>
-              <th 
-                style={{ padding: '4px', border: '1px solid #ddd', cursor: 'pointer', userSelect: 'none', fontSize: '12px', whiteSpace: 'nowrap', textAlign: 'left' }}
-                onClick={() => handleSort('amount_water_grams')}
-              >
-                Water{getSortIcon('amount_water_grams')}
+              <th style={{ padding: '4px', border: '1px solid #ddd', fontSize: '12px', whiteSpace: 'nowrap', textAlign: 'left' }}>
+                {createIconHeader('💧', 'Water (g)', 'amount_water_grams', () => handleSort('amount_water_grams'))}
               </th>
-              <th 
-                style={{ padding: '4px', border: '1px solid #ddd', cursor: 'pointer', userSelect: 'none', fontSize: '12px', whiteSpace: 'nowrap', textAlign: 'left' }}
-                onClick={() => handleSort('brew_ratio')}
-              >
-                Ratio{getSortIcon('brew_ratio')}
+              <th style={{ padding: '4px', border: '1px solid #ddd', fontSize: '12px', whiteSpace: 'nowrap', textAlign: 'left' }}>
+                {createIconHeader('⚖️', 'Ratio', 'brew_ratio', () => handleSort('brew_ratio'))}
               </th>
-              <th 
-                style={{ padding: '4px', border: '1px solid #ddd', cursor: 'pointer', userSelect: 'none', fontSize: '12px', whiteSpace: 'nowrap', textAlign: 'left' }}
-                onClick={() => handleSort('brew_temperature_c')}
-              >
-                Temp{getSortIcon('brew_temperature_c')}
+              <th style={{ padding: '4px', border: '1px solid #ddd', fontSize: '12px', whiteSpace: 'nowrap', textAlign: 'left' }}>
+                {createIconHeader('🌡️', 'Temperature (°C)', 'brew_temperature_c', () => handleSort('brew_temperature_c'))}
               </th>
-              <th 
-                style={{ padding: '4px', border: '1px solid #ddd', cursor: 'pointer', userSelect: 'none', fontSize: '12px', whiteSpace: 'nowrap', textAlign: 'left' }}
-                onClick={() => handleSort('bloom_time_seconds')}
-              >
-                Bloom{getSortIcon('bloom_time_seconds')}
+              <th style={{ padding: '4px', border: '1px solid #ddd', fontSize: '12px', whiteSpace: 'nowrap', textAlign: 'left' }}>
+                {createIconHeader('🌸', 'Bloom Time', 'bloom_time_seconds', () => handleSort('bloom_time_seconds'))}
               </th>
-              <th 
-                style={{ padding: '4px', border: '1px solid #ddd', cursor: 'pointer', userSelect: 'none', fontSize: '12px', whiteSpace: 'nowrap', textAlign: 'left' }}
-                onClick={() => handleSort('brew_time_seconds')}
-              >
-                Time{getSortIcon('brew_time_seconds')}
+              <th style={{ padding: '4px', border: '1px solid #ddd', fontSize: '12px', whiteSpace: 'nowrap', textAlign: 'left' }}>
+                {createIconHeader('⏱️', 'Brew Time', 'brew_time_seconds', () => handleSort('brew_time_seconds'))}
               </th>
-              <th 
-                style={{ padding: '4px', border: '1px solid #ddd', cursor: 'pointer', userSelect: 'none', fontSize: '12px', whiteSpace: 'nowrap', textAlign: 'left' }}
-                onClick={() => handleSort('sweetness')}
-              >
-                Sweet{getSortIcon('sweetness')}
+              <th style={{ padding: '4px', border: '1px solid #ddd', fontSize: '12px', whiteSpace: 'nowrap', textAlign: 'left' }}>
+                {createIconHeader('🍯', 'Sweetness', 'sweetness', () => handleSort('sweetness'))}
               </th>
-              <th 
-                style={{ padding: '4px', border: '1px solid #ddd', cursor: 'pointer', userSelect: 'none', fontSize: '12px', whiteSpace: 'nowrap', textAlign: 'left' }}
-                onClick={() => handleSort('acidity')}
-              >
-                Acid{getSortIcon('acidity')}
+              <th style={{ padding: '4px', border: '1px solid #ddd', fontSize: '12px', whiteSpace: 'nowrap', textAlign: 'left' }}>
+                {createIconHeader('🍋', 'Acidity', 'acidity', () => handleSort('acidity'))}
               </th>
-              <th 
-                style={{ padding: '4px', border: '1px solid #ddd', cursor: 'pointer', userSelect: 'none', fontSize: '12px', whiteSpace: 'nowrap', textAlign: 'left' }}
-                onClick={() => handleSort('bitterness')}
-              >
-                Bitter{getSortIcon('bitterness')}
+              <th style={{ padding: '4px', border: '1px solid #ddd', fontSize: '12px', whiteSpace: 'nowrap', textAlign: 'left' }}>
+                {createIconHeader('☕', 'Bitterness', 'bitterness', () => handleSort('bitterness'))}
               </th>
-              <th 
-                style={{ padding: '4px', border: '1px solid #ddd', cursor: 'pointer', userSelect: 'none', fontSize: '12px', whiteSpace: 'nowrap', textAlign: 'left' }}
-                onClick={() => handleSort('body')}
-              >
-                Body{getSortIcon('body')}
+              <th style={{ padding: '4px', border: '1px solid #ddd', fontSize: '12px', whiteSpace: 'nowrap', textAlign: 'left' }}>
+                {createIconHeader('💪', 'Body', 'body', () => handleSort('body'))}
               </th>
-              <th 
-                style={{ padding: '4px', border: '1px solid #ddd', cursor: 'pointer', userSelect: 'none', fontSize: '12px', whiteSpace: 'nowrap', textAlign: 'left' }}
-                onClick={() => handleSort('aroma')}
-              >
-                Aroma{getSortIcon('aroma')}
+              <th style={{ padding: '4px', border: '1px solid #ddd', fontSize: '12px', whiteSpace: 'nowrap', textAlign: 'left' }}>
+                {createIconHeader('👃', 'Aroma', 'aroma', () => handleSort('aroma'))}
               </th>
-              <th 
-                style={{ padding: '4px', border: '1px solid #ddd', cursor: 'pointer', userSelect: 'none', fontSize: '12px', whiteSpace: 'nowrap', textAlign: 'left' }}
-                onClick={() => handleSort('grinder')}
-              >
-                Grinder{getSortIcon('grinder')}
+              <th style={{ padding: '4px', border: '1px solid #ddd', fontSize: '12px', whiteSpace: 'nowrap', textAlign: 'left' }}>
+                {createIconHeader('⚙️', 'Grinder', 'grinder', () => handleSort('grinder'))}
               </th>
-              <th style={{ padding: '4px', border: '1px solid #ddd', fontSize: '12px', whiteSpace: 'nowrap', textAlign: 'left' }}>Setting</th>
-              <th 
-                style={{ padding: '4px', border: '1px solid #ddd', cursor: 'pointer', userSelect: 'none', fontSize: '12px', whiteSpace: 'nowrap', textAlign: 'left' }}
-                onClick={() => handleSort('score')}
-              >
-                Score{getSortIcon('score')}
+              <th style={{ padding: '4px', border: '1px solid #ddd', fontSize: '12px', whiteSpace: 'nowrap', textAlign: 'left' }} title="Grinder Setting">
+                🔧
               </th>
-              <th style={{ padding: '4px', border: '1px solid #ddd', fontSize: '12px', whiteSpace: 'nowrap', textAlign: 'left' }}>Notes</th>
+              <th style={{ padding: '4px', border: '1px solid #ddd', fontSize: '12px', whiteSpace: 'nowrap', textAlign: 'left' }}>
+                {createIconHeader('⭐', 'Score', 'score', () => handleSort('score'))}
+              </th>
+              <th style={{ padding: '4px', border: '1px solid #ddd', fontSize: '12px', whiteSpace: 'nowrap', textAlign: 'left' }} title="Notes">
+                📝
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -365,9 +372,10 @@ function BrewSessionTable({ sessions, onDelete, onDuplicate, onEdit, onRefresh, 
                     maxWidth: '200px',
                     verticalAlign: 'top'
                   }}
-                  title={`${session.product_details?.product_name || 'Unknown'}\n\nBean Type: ${Array.isArray(session.product_details?.bean_type) ? session.product_details.bean_type.join(', ') : (session.product_details?.bean_type || 'Unknown')}\nRoaster: ${session.product_details?.roaster || 'Unknown'}\nRoast Date: ${session.product_details?.roast_date ? formatDateNorwegian(session.product_details.roast_date) : 'Unknown'}`}
+                  title={`${session.product_details?.product_name || 'Unknown'}\n\nBean Type: ${Array.isArray(session.product_details?.bean_type) ? session.product_details.bean_type.join(', ') : (session.product_details?.bean_type || 'Unknown')}\nRoaster: ${session.product_details?.roaster || 'Unknown'}\nRoast Date: ${session.product_details?.roast_date ? formatDateNorwegian(session.product_details.roast_date) : 'Unknown'}${isDecafProduct(session) ? '\n\n⚠️ DECAF PRODUCT' : ''}`}
                 >
                   {session.product_details?.product_name || '-'}
+                  {isDecafProduct(session) && <span style={{ marginLeft: '4px', color: '#ff6b35' }} title="Decaf Product">D</span>}
                 </td>
                 <td 
                   style={{ padding: '4px', border: '1px solid #ddd', fontSize: '12px', cursor: 'help', verticalAlign: 'top' }}
@@ -375,9 +383,15 @@ function BrewSessionTable({ sessions, onDelete, onDuplicate, onEdit, onRefresh, 
                 >
                   {formatDateNorwegian(session.timestamp)}
                 </td>
-                <td style={{ padding: '4px', border: '1px solid #ddd', fontSize: '12px', verticalAlign: 'top', whiteSpace: 'nowrap' }}>{session.brew_method || '-'}</td>
-                <td style={{ padding: '4px', border: '1px solid #ddd', fontSize: '12px', verticalAlign: 'top', whiteSpace: 'nowrap' }}>{session.recipe || '-'}</td>
-                <td style={{ padding: '4px', border: '1px solid #ddd', fontSize: '12px', verticalAlign: 'top', whiteSpace: 'nowrap' }}>{session.filter || '-'}</td>
+                <td style={{ padding: '4px', border: '1px solid #ddd', fontSize: '12px', verticalAlign: 'top', whiteSpace: 'nowrap' }} title={session.brew_method}>
+                  {session.brew_method ? getShortName(session.brew_method) : '-'}
+                </td>
+                <td style={{ padding: '4px', border: '1px solid #ddd', fontSize: '12px', verticalAlign: 'top', whiteSpace: 'nowrap' }} title={session.recipe}>
+                  {session.recipe ? getShortName(session.recipe) : '-'}
+                </td>
+                <td style={{ padding: '4px', border: '1px solid #ddd', fontSize: '12px', verticalAlign: 'top', whiteSpace: 'nowrap' }} title={session.filter}>
+                  {session.filter ? getShortName(session.filter) : '-'}
+                </td>
                 <td style={{ padding: '4px', border: '1px solid #ddd', fontSize: '12px', textAlign: 'center', verticalAlign: 'top', whiteSpace: 'nowrap' }}>
                   {session.amount_coffee_grams ? `${session.amount_coffee_grams}g` : '-'}
                 </td>
@@ -399,7 +413,9 @@ function BrewSessionTable({ sessions, onDelete, onDuplicate, onEdit, onRefresh, 
                 <td style={{ padding: '4px', border: '1px solid #ddd', fontSize: '12px', textAlign: 'center', verticalAlign: 'top', whiteSpace: 'nowrap' }}>{session.bitterness || '-'}</td>
                 <td style={{ padding: '4px', border: '1px solid #ddd', fontSize: '12px', textAlign: 'center', verticalAlign: 'top', whiteSpace: 'nowrap' }}>{session.body || '-'}</td>
                 <td style={{ padding: '4px', border: '1px solid #ddd', fontSize: '12px', textAlign: 'center', verticalAlign: 'top', whiteSpace: 'nowrap' }}>{session.aroma || '-'}</td>
-                <td style={{ padding: '4px', border: '1px solid #ddd', fontSize: '12px', verticalAlign: 'top', whiteSpace: 'nowrap' }}>{session.grinder || '-'}</td>
+                <td style={{ padding: '4px', border: '1px solid #ddd', fontSize: '12px', verticalAlign: 'top', whiteSpace: 'nowrap' }} title={session.grinder}>
+                  {session.grinder ? getShortName(session.grinder) : '-'}
+                </td>
                 <td style={{ padding: '4px', border: '1px solid #ddd', fontSize: '12px', verticalAlign: 'top', whiteSpace: 'nowrap' }}>{session.grinder_setting || '-'}</td>
                 <td style={{ padding: '4px', border: '1px solid #ddd', fontSize: '12px', textAlign: 'center', verticalAlign: 'top', whiteSpace: 'nowrap' }}>{session.score || '-'}</td>
                 <td 
