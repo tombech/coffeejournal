@@ -224,12 +224,13 @@ function Home() {
 
 
   // Mini radar chart component for products
-  const MiniRadarChart = ({ data, size = 120 }) => {
+  const MiniRadarChart = ({ data, size = 240 }) => {
     if (!data) return null;
     
     const center = size / 2;
-    const maxRadius = 40;
+    const maxRadius = 80;
     const angles = [0, 72, 144, 216, 288]; // 5 points, 72 degrees apart
+    const labels = ['Sweetness', 'Acidity', 'Body', 'Aroma', 'Bitterness'];
     const values = [data.sweetness, data.acidity, data.body, data.aroma, data.bitterness];
     
     const getPoint = (angle, radius) => {
@@ -247,30 +248,51 @@ function Home() {
     
     const polygonPoints = dataPoints.map(point => `${point.x},${point.y}`).join(' ');
     
+    // Generate labels
+    const labelElements = labels.map((label, index) => {
+      const point = getPoint(angles[index], maxRadius + 20);
+      return (
+        <text
+          key={index}
+          x={point.x}
+          y={point.y}
+          textAnchor="middle"
+          dominantBaseline="middle"
+          fontSize="11"
+          fill="#666"
+        >
+          {label}
+        </text>
+      );
+    });
+    
     return (
-      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
-        <circle cx={center} cy={center} r={maxRadius} fill="none" stroke="#e0e0e0" strokeWidth="1" />
-        <circle cx={center} cy={center} r={maxRadius * 0.5} fill="none" stroke="#e0e0e0" strokeWidth="0.5" />
-        {angles.map((angle, index) => {
-          const point = getPoint(angle, maxRadius);
-          return (
-            <line
-              key={index}
-              x1={center}
-              y1={center}
-              x2={point.x}
-              y2={point.y}
-              stroke="#e0e0e0"
-              strokeWidth="0.5"
-            />
-          );
-        })}
-        <polygon
-          points={polygonPoints}
-          fill="rgba(54, 162, 235, 0.2)"
-          stroke="rgba(54, 162, 235, 0.8)"
-          strokeWidth="1"
-        />
+      <svg width={size + 40} height={size + 40} viewBox={`0 0 ${size + 40} ${size + 40}`}>
+        <g transform="translate(20, 20)">
+          <circle cx={center} cy={center} r={maxRadius} fill="none" stroke="#e0e0e0" strokeWidth="1" />
+          <circle cx={center} cy={center} r={maxRadius * 0.5} fill="none" stroke="#e0e0e0" strokeWidth="0.5" />
+          {angles.map((angle, index) => {
+            const point = getPoint(angle, maxRadius);
+            return (
+              <line
+                key={index}
+                x1={center}
+                y1={center}
+                x2={point.x}
+                y2={point.y}
+                stroke="#e0e0e0"
+                strokeWidth="0.5"
+              />
+            );
+          })}
+          <polygon
+            points={polygonPoints}
+            fill="rgba(54, 162, 235, 0.2)"
+            stroke="rgba(54, 162, 235, 0.8)"
+            strokeWidth="1"
+          />
+          {labelElements}
+        </g>
       </svg>
     );
   };
@@ -346,7 +368,7 @@ function Home() {
             {getTopProducts().length > 0 ? (
               <div style={{ 
                 display: 'grid', 
-                gridTemplateColumns: 'repeat(auto-fill, 300px)', 
+                gridTemplateColumns: 'repeat(auto-fill, 600px)', 
                 gap: '20px',
                 justifyContent: 'start'
               }}>
@@ -359,13 +381,12 @@ function Home() {
                     <div style={{ 
                       border: '2px solid #ddd',
                       borderRadius: '12px',
-                      padding: '20px',
+                      padding: '15px',
                       backgroundColor: '#f9f9f9',
                       boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
                       display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'center',
-                      textAlign: 'center',
+                      flexDirection: 'row',
+                      alignItems: 'stretch',
                       position: 'relative',
                       cursor: 'pointer',
                       transition: 'transform 0.2s ease, box-shadow 0.2s ease'
@@ -410,27 +431,27 @@ function Home() {
                       {item.averageScore.toFixed(1)}
                     </div>
 
-                    {/* Product Info */}
-                    <div style={{ marginTop: '15px', marginBottom: '20px', width: '100%' }}>
-                      <h4 style={{ margin: '0 0 15px 0', fontSize: '18px', fontWeight: 'bold' }}>
-                        {item.product.product_name}
-                      </h4>
-                      <div style={{ fontSize: '14px', lineHeight: '1.6' }}>
-                        <div><strong>Roaster:</strong> {item.product.roaster || 'Unknown'}</div>
-                        <div><strong>Bean Type:</strong> {Array.isArray(item.product.bean_type) ? item.product.bean_type.join(', ') : (item.product.bean_type || 'Unknown')}</div>
-                        <div><strong>Country:</strong> {item.product.country || 'Unknown'}</div>
-                        <div><strong>Sessions:</strong> {item.sessionCount} brews</div>
+                    {/* Left side - Product Info */}
+                    <div style={{ flex: '1', paddingRight: '15px' }}>
+                      <div style={{ marginTop: '5px', marginBottom: '5px' }}>
+                        <h4 style={{ margin: '0 0 8px 0', fontSize: '18px', fontWeight: 'bold' }}>
+                          {item.product.product_name}
+                        </h4>
+                        <div style={{ fontSize: '14px', lineHeight: '1.4' }}>
+                          <div><strong>Roaster:</strong> {item.product.roaster || 'Unknown'}</div>
+                          <div><strong>Bean Type:</strong> {Array.isArray(item.product.bean_type) ? item.product.bean_type.join(', ') : (item.product.bean_type || 'Unknown')}</div>
+                          <div><strong>Country:</strong> {item.product.country || 'Unknown'}</div>
+                          <div><strong>Sessions:</strong> {item.sessionCount} brews</div>
+                        </div>
                       </div>
                     </div>
 
-                    {/* Radar Chart */}
+                    {/* Right side - Radar Chart */}
                     <div style={{ 
                       display: 'flex', 
+                      alignItems: 'center',
                       justifyContent: 'center',
-                      padding: '10px',
-                      backgroundColor: 'white',
-                      borderRadius: '8px',
-                      border: '1px solid #e0e0e0'
+                      padding: '0'
                     }}>
                       <MiniRadarChart data={item.averages} />
                     </div>
