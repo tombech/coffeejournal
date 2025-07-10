@@ -121,5 +121,31 @@
     "flavor_profile_match": 8,
     "notes": "Perfect for espresso, rich crema and balanced bitterness",
     "id": 6
+  },
+  {
+    "timestamp": "2025-07-10T08:30:00.000Z",
+    "product_batch_id": 4,
+    "product_id": 4,
+    "brew_method_id": 1,
+    "recipe_id": 1,
+    "grinder_id": null,
+    "grinder_setting": "",
+    "filter_id": 5,
+    "kettle_id": 2,
+    "scale_id": null,
+    "amount_coffee_grams": "20",
+    "amount_water_grams": "299.8",
+    "brew_temperature_c": "",
+    "bloom_time_seconds": 90,
+    "brew_time_seconds": 160,
+    "sweetness": "",
+    "acidity": "",
+    "bitterness": "",
+    "body": "",
+    "aroma": "",
+    "flavor_profile_match": "",
+    "score": "",
+    "notes": "",
+    "id": 7
   }
 ]

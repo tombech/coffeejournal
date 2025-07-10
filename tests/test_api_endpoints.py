@@ -23,7 +23,7 @@ class TestProductEndpoints:
         
         product = response.get_json()
         assert product['roaster'] == 'Blue Bottle Coffee'
-        assert product['bean_type'] == 'Arabica'
+        assert product['bean_type'] == ['Arabica']  # bean_type is now an array
         assert product['product_name'] == 'Test Blend'
         assert product['roast_type'] == 5
         assert product['id'] is not None

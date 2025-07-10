@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useToast } from './Toast';
 import { API_BASE_URL } from '../config';
 import StarRating from './StarRating';
+import DateInput from './DateInput';
 
 function BatchForm({ productId, initialData, onBatchSubmitted, onCancel }) {
   const [formData, setFormData] = useState({
@@ -142,8 +143,7 @@ function BatchForm({ productId, initialData, onBatchSubmitted, onCancel }) {
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', marginBottom: '15px' }}>
           <label>
             Roast Date:
-            <input 
-              type="date" 
+            <DateInput 
               name="roast_date" 
               value={formData.roast_date} 
               onChange={handleChange} 
@@ -153,8 +153,7 @@ function BatchForm({ productId, initialData, onBatchSubmitted, onCancel }) {
           
           <label>
             Purchase Date:
-            <input 
-              type="date" 
+            <DateInput 
               name="purchase_date" 
               value={formData.purchase_date} 
               onChange={handleChange} 

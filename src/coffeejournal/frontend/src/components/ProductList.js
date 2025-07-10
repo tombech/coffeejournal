@@ -84,6 +84,20 @@ function ProductList() {
         >
           ➕
         </Link>
+        <Link 
+          to="/settings" 
+          style={{ 
+            padding: '6px 8px', 
+            border: 'none', 
+            background: 'none', 
+            cursor: 'pointer', 
+            fontSize: '16px',
+            textDecoration: 'none'
+          }}
+          title="Back to Settings"
+        >
+          ⬅️
+        </Link>
       </div>
 
       {products.length === 0 ? (
@@ -106,7 +120,7 @@ function ProductList() {
                   {product.image_url && (
                     <img 
                       src={product.image_url} 
-                      alt={product.bean_type} 
+                      alt={Array.isArray(product.bean_type) ? product.bean_type.join(', ') : (product.bean_type || 'Coffee')} 
                       className="product-image"
                     />
                   )}
@@ -128,7 +142,7 @@ function ProductList() {
                       )}
                     </div>
                     <p style={{ margin: '0 0 6px 0', fontSize: '14px', color: '#666' }}>
-                      <strong>{product.bean_type}</strong> • {product.country}{product.region ? ` (${product.region})` : ''}
+                      <strong>{Array.isArray(product.bean_type) ? product.bean_type.join(', ') : (product.bean_type || 'Unknown')}</strong> • {product.country}{Array.isArray(product.region) ? ` (${product.region.join(', ')})` : (product.region ? ` (${product.region})` : '')}
                     </p>
                     {product.rating && (
                       <div style={{ margin: '0 0 8px 0' }}>

@@ -195,13 +195,16 @@ function ProductDetail() {
           <span>{product.roaster || '-'}</span>
           
           <strong>Bean Type:</strong>
-          <span>{product.bean_type || '-'}</span>
+          <span>{Array.isArray(product.bean_type) ? product.bean_type.join(', ') : (product.bean_type || '-')}</span>
           
           <strong>Country:</strong>
           <span>{product.country || '-'}</span>
           
           <strong>Region:</strong>
-          <span>{product.region || '-'}</span>
+          <span>{Array.isArray(product.region) ? product.region.join(', ') : (product.region || '-')}</span>
+          
+          <strong>Bean Process:</strong>
+          <span>{product.bean_process || '-'}</span>
           
           <strong>Product Name:</strong>
           <span>{product.product_name || '-'}</span>
@@ -228,6 +231,9 @@ function ProductDetail() {
           <strong>Description:</strong>
           <span>{product.description || '-'}</span>
           
+          <strong>Notes:</strong>
+          <span style={{ whiteSpace: 'pre-wrap' }}>{product.notes || '-'}</span>
+          
           <strong>Product URL:</strong>
           <span>
             {product.url ? (
@@ -238,7 +244,7 @@ function ProductDetail() {
           <strong>Image:</strong>
           <span>
             {product.image_url ? (
-              <img src={product.image_url} alt={product.bean_type} style={{ maxWidth: '200px', borderRadius: '8px' }} />
+              <img src={product.image_url} alt={Array.isArray(product.bean_type) ? product.bean_type.join(', ') : (product.bean_type || 'Coffee')} style={{ maxWidth: '200px', borderRadius: '8px' }} />
             ) : '-'}
           </span>
         </div>

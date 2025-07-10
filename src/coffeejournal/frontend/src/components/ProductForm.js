@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useToast } from './Toast';
 import { API_BASE_URL } from '../config';
 import StarRating from './StarRating';
+import MultiSelect from './MultiSelect';
 
 function ProductForm() {
   const { id } = useParams(); // Get ID from URL for edit mode
@@ -10,9 +11,9 @@ function ProductForm() {
   const { addToast } = useToast();
   const [formData, setFormData] = useState({
     roaster: '',
-    bean_type: '',
+    bean_type: [],
     country: '',
-    region: '',
+    region: [],
     product_name: '',
     roast_type: '',
     description: '',
@@ -20,7 +21,9 @@ function ProductForm() {
     image_url: '',
     decaf: false,
     decaf_method: '',
-    rating: ''
+    rating: '',
+    bean_process: '',
+    notes: ''
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -72,7 +75,23 @@ function ProductForm() {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       const data = await response.json();
-      setFormData(data); // Pre-fill form with existing data
+      // Convert single values to arrays for multi-select fields and ensure all fields have values
+      setFormData({
+        roaster: data.roaster || '',
+        bean_type: Array.isArray(data.bean_type) ? data.bean_type : (data.bean_type ? [data.bean_type] : []),
+        country: data.country || '',
+        region: Array.isArray(data.region) ? data.region : (data.region ? [data.region] : []),
+        product_name: data.product_name || '',
+        roast_type: data.roast_type || '',
+        description: data.description || '',
+        url: data.url || '',
+        image_url: data.image_url || '',
+        decaf: data.decaf || false,
+        decaf_method: data.decaf_method || '',
+        rating: data.rating || '',
+        bean_process: data.bean_process || '',
+        notes: data.notes || ''
+      });
     } catch (err) {
       setError("Failed to fetch product for editing: " + err.message);
       console.error("Error fetching product:", err);
@@ -91,6 +110,10 @@ function ProductForm() {
 
   const handleRatingChange = (rating) => {
     setFormData((prev) => ({ ...prev, rating: rating }));
+  };
+
+  const handleMultiSelectChange = (name, values) => {
+    setFormData((prev) => ({ ...prev, [name]: values }));
   };
 
   // Handle mobile datalist issues
@@ -133,8 +156,15 @@ function ProductForm() {
         throw new Error(`HTTP error! status: ${response.status} - ${errorData.message || 'Unknown error'}`);
       }
 
+      const result = await response.json();
       addToast(`Product ${isEditMode ? 'updated' : 'created'} successfully!`, 'success');
-      navigate('/products'); // Redirect to product list
+      
+      // Redirect to product detail page for new products, or back to list for edits
+      if (!isEditMode && result.id) {
+        navigate(`/products/${result.id}`);
+      } else {
+        navigate('/products');
+      }
     } catch (err) {
       setError(`Failed to ${isEditMode ? 'update' : 'create'} product: ` + err.message);
       console.error("Error submitting product:", err);
@@ -171,21 +201,13 @@ function ProductForm() {
         </label>
         <label>
           Bean Type:
-          <input
-            type="text"
+          <MultiSelect
             name="bean_type"
-            value={formData.bean_type}
-            onChange={handleChange}
-            list="beanTypesOptions"
-            data-list="beanTypesOptions"
-            onFocus={handleMobileDatalistFocus}
-            onBlur={handleMobileDatalistBlur}
+            values={formData.bean_type}
+            onChange={handleMultiSelectChange}
+            options={beanTypes}
+            placeholder="Add bean types..."
           />
-          <datalist id="beanTypesOptions">
-            {beanTypes.map((bt) => (
-              <option key={bt.id} value={bt.name} />
-            ))}
-          </datalist>
         </label>
         <label>
           Country:
@@ -207,22 +229,23 @@ function ProductForm() {
         </label>
         <label>
           Region: (if different from country or more specific)
+          <MultiSelect
+            name="region"
+            values={formData.region}
+            onChange={handleMultiSelectChange}
+            options={countries}
+            placeholder="Add regions..."
+          />
+        </label>
+        <label>
+          Bean Process:
           <input
             type="text"
-            name="region"
-            value={formData.region}
+            name="bean_process"
+            value={formData.bean_process}
             onChange={handleChange}
-            list="regionsOptions"
-            data-list="regionsOptions"
-            onFocus={handleMobileDatalistFocus}
-            onBlur={handleMobileDatalistBlur}
+            placeholder="e.g., Washed, Natural, Honey"
           />
-          <datalist id="regionsOptions">
-            {/* Reusing countries for regions for simplicity, assuming regions might also be country names or unique names */}
-            {countries.map((c) => (
-              <option key={`region-${c.id}`} value={c.name} />
-            ))}
-          </datalist>
         </label>
         <label>
           Product Name: (optional custom name)
@@ -300,6 +323,16 @@ function ProductForm() {
               size="xlarge"
             />
           </div>
+        </label>
+        <label>
+          Notes:
+          <textarea
+            name="notes"
+            value={formData.notes}
+            onChange={handleChange}
+            rows="3"
+            placeholder="Any additional notes about this product..."
+          />
         </label>
         <button 
           type="submit" 

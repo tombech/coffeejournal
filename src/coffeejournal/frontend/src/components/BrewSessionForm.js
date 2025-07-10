@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useToast } from './Toast';
 import { API_BASE_URL } from '../config';
+import DateTimeInput from './DateTimeInput';
+import TimeInput from './TimeInput';
 
 function BrewSessionForm({ product_batch_id = null, onSessionSubmitted, initialData = null }) {
   const { addToast } = useToast();
@@ -11,6 +13,9 @@ function BrewSessionForm({ product_batch_id = null, onSessionSubmitted, initialD
     recipe: '',
     grinder: '',
     grinder_setting: '',
+    filter: '',
+    kettle: '',
+    scale: '',
     amount_coffee_grams: '',
     amount_water_grams: '',
     brew_temperature_c: '',
@@ -35,21 +40,30 @@ function BrewSessionForm({ product_batch_id = null, onSessionSubmitted, initialD
   const [brewMethods, setBrewMethods] = useState([]);
   const [recipes, setRecipes] = useState([]);
   const [grinders, setGrinders] = useState([]);
+  const [filters, setFilters] = useState([]);
+  const [kettles, setKettles] = useState([]);
+  const [scales, setScales] = useState([]);
   const [products, setProducts] = useState([]);
   const [batches, setBatches] = useState([]);
 
   useEffect(() => {
     const fetchLookupData = async () => {
       try {
-        const [brewMethodsRes, recipesRes, grindersRes, productsRes] = await Promise.all([
+        const [brewMethodsRes, recipesRes, grindersRes, filtersRes, kettlesRes, scalesRes, productsRes] = await Promise.all([
           fetch(`${API_BASE_URL}/brew_methods`),
           fetch(`${API_BASE_URL}/recipes`),
           fetch(`${API_BASE_URL}/grinders`),
+          fetch(`${API_BASE_URL}/filters`),
+          fetch(`${API_BASE_URL}/kettles`),
+          fetch(`${API_BASE_URL}/scales`),
           fetch(`${API_BASE_URL}/products`),
         ]);
         setBrewMethods(await brewMethodsRes.json());
         setRecipes(await recipesRes.json());
         setGrinders(await grindersRes.json());
+        setFilters(await filtersRes.json());
+        setKettles(await kettlesRes.json());
+        setScales(await scalesRes.json());
         setProducts(await productsRes.json());
       } catch (err) {
         console.error("Error fetching lookup data:", err);
@@ -65,6 +79,9 @@ function BrewSessionForm({ product_batch_id = null, onSessionSubmitted, initialD
         ...initialData,
         brew_method: initialData.brew_method || '',
         recipe: initialData.recipe || '',
+        filter: initialData.filter || '',
+        kettle: initialData.kettle || '',
+        scale: initialData.scale || '',
         timestamp: initialData.timestamp || new Date().toISOString(),
       });
       // If editing, fetch batches for the selected product
@@ -92,6 +109,16 @@ function BrewSessionForm({ product_batch_id = null, onSessionSubmitted, initialD
     } catch (err) {
       console.error("Error fetching batches:", err);
     }
+  };
+
+  // Norwegian date formatting
+  const formatDateNorwegian = (dateString) => {
+    if (!dateString) return 'N/A';
+    const date = new Date(dateString);
+    const day = date.getDate().toString().padStart(2, '0');
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const year = date.getFullYear().toString().slice(-2);
+    return `${day}.${month}.${year}`;
   };
 
   const handleChange = (e) => {
@@ -123,11 +150,6 @@ function BrewSessionForm({ product_batch_id = null, onSessionSubmitted, initialD
     }
   };
 
-  const handleTimestampChange = (e) => {
-    // Handles both date and time changes and combines them
-    const newTimestamp = new Date(e.target.value).toISOString();
-    setFormData(prev => ({ ...prev, timestamp: newTimestamp }));
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -174,19 +196,15 @@ function BrewSessionForm({ product_batch_id = null, onSessionSubmitted, initialD
 
   if (error) return <p className="error-message">{error}</p>;
 
-  // Format timestamp for datetime-local input
-  const localTimestamp = formData.timestamp ? new Date(formData.timestamp).toISOString().slice(0, 16) : '';
-
   return (
     <form onSubmit={handleSubmit}>
       <h4>{isEditMode ? 'Edit Brew Session' : 'Add New Brew Session'}</h4>
       <label>
         Timestamp:
-        <input
-          type="datetime-local"
+        <DateTimeInput
           name="timestamp"
-          value={localTimestamp}
-          onChange={handleTimestampChange}
+          value={formData.timestamp}
+          onChange={handleChange}
           required
         />
       </label>
@@ -223,7 +241,7 @@ function BrewSessionForm({ product_batch_id = null, onSessionSubmitted, initialD
               <option value="">Select a batch</option>
               {batches.map((batch) => (
                 <option key={batch.id} value={batch.id}>
-                  Roast Date: {batch.roast_date} ({batch.amount_grams}g)
+                  Roast Date: {formatDateNorwegian(batch.roast_date)} ({batch.amount_grams}g)
                 </option>
               ))}
             </select>
@@ -291,6 +309,60 @@ function BrewSessionForm({ product_batch_id = null, onSessionSubmitted, initialD
         <input type="text" name="grinder_setting" value={formData.grinder_setting} onChange={handleChange} />
       </label>
       <label>
+        Filter:
+        <input
+          type="text"
+          name="filter"
+          value={formData.filter}
+          onChange={handleChange}
+          list="filtersOptions"
+          data-list="filtersOptions"
+          onFocus={handleMobileDatalistFocus}
+          onBlur={handleMobileDatalistBlur}
+        />
+        <datalist id="filtersOptions">
+          {filters.map((f) => (
+            <option key={f.id} value={f.name} />
+          ))}
+        </datalist>
+      </label>
+      <label>
+        Kettle:
+        <input
+          type="text"
+          name="kettle"
+          value={formData.kettle}
+          onChange={handleChange}
+          list="kettlesOptions"
+          data-list="kettlesOptions"
+          onFocus={handleMobileDatalistFocus}
+          onBlur={handleMobileDatalistBlur}
+        />
+        <datalist id="kettlesOptions">
+          {kettles.map((k) => (
+            <option key={k.id} value={k.name} />
+          ))}
+        </datalist>
+      </label>
+      <label>
+        Scale:
+        <input
+          type="text"
+          name="scale"
+          value={formData.scale}
+          onChange={handleChange}
+          list="scalesOptions"
+          data-list="scalesOptions"
+          onFocus={handleMobileDatalistFocus}
+          onBlur={handleMobileDatalistBlur}
+        />
+        <datalist id="scalesOptions">
+          {scales.map((s) => (
+            <option key={s.id} value={s.name} />
+          ))}
+        </datalist>
+      </label>
+      <label>
         Coffee Amount (grams):
         <input type="number" name="amount_coffee_grams" value={formData.amount_coffee_grams} onChange={handleChange} step="0.1" required />
       </label>
@@ -304,12 +376,22 @@ function BrewSessionForm({ product_batch_id = null, onSessionSubmitted, initialD
       </label>
       {/* --- REMOVED brew_ratio input --- */}
       <label>
-        Bloom Time (seconds):
-        <input type="number" name="bloom_time_seconds" value={formData.bloom_time_seconds} onChange={handleChange} min="0" />
+        Bloom Time:
+        <TimeInput 
+          name="bloom_time_seconds" 
+          value={formData.bloom_time_seconds} 
+          onChange={handleChange} 
+          placeholder="e.g., 30 or 0:30"
+        />
       </label>
       <label>
-        Brew Time (seconds):
-        <input type="number" name="brew_time_seconds" value={formData.brew_time_seconds} onChange={handleChange} min="0" />
+        Brew Time:
+        <TimeInput 
+          name="brew_time_seconds" 
+          value={formData.brew_time_seconds} 
+          onChange={handleChange} 
+          placeholder="e.g., 150 or 2:30"
+        />
       </label>
 
       {/* Flavor Scores */}

@@ -4,7 +4,8 @@ from .json_repository import (
     RoasterRepository, BeanTypeRepository, CountryRepository,
     BrewMethodRepository, RecipeRepository, ProductRepository,
     BatchRepository, BrewSessionRepository, GrinderRepository,
-    DecafMethodRepository
+    DecafMethodRepository, FilterRepository, KettleRepository,
+    ScaleRepository
 )
 
 
@@ -109,6 +110,33 @@ class RepositoryFactory:
             else:
                 raise NotImplementedError(f"Storage type {self.storage_type} not implemented")
         return self._repositories['decaf_method']
+    
+    def get_filter_repository(self) -> FilterRepository:
+        """Get or create filter repository."""
+        if 'filter' not in self._repositories:
+            if self.storage_type == 'json':
+                self._repositories['filter'] = FilterRepository(self._get_data_dir())
+            else:
+                raise NotImplementedError(f"Storage type {self.storage_type} not implemented")
+        return self._repositories['filter']
+    
+    def get_kettle_repository(self) -> KettleRepository:
+        """Get or create kettle repository."""
+        if 'kettle' not in self._repositories:
+            if self.storage_type == 'json':
+                self._repositories['kettle'] = KettleRepository(self._get_data_dir())
+            else:
+                raise NotImplementedError(f"Storage type {self.storage_type} not implemented")
+        return self._repositories['kettle']
+    
+    def get_scale_repository(self) -> ScaleRepository:
+        """Get or create scale repository."""
+        if 'scale' not in self._repositories:
+            if self.storage_type == 'json':
+                self._repositories['scale'] = ScaleRepository(self._get_data_dir())
+            else:
+                raise NotImplementedError(f"Storage type {self.storage_type} not implemented")
+        return self._repositories['scale']
 
 
 # Global factory instance

@@ -63,13 +63,14 @@ function StarRating({ rating, onRatingChange, readOnly = false, maxRating = 5, s
         title={readOnly ? `${starValue} star${starValue !== 1 ? 's' : ''}` : `Click left for ${starValue - 0.5}, right for ${starValue}`}
       >
         {isHalf ? (
-          <span style={{ position: 'relative' }}>
+          <span style={{ position: 'relative', display: 'inline-block' }}>
             <span style={{ color: '#ccc' }}>☆</span>
             <span 
               style={{ 
                 position: 'absolute', 
                 left: 0, 
-                top: 0, 
+                top: '50%',
+                transform: 'translateY(-50%)',
                 width: '50%', 
                 overflow: 'hidden',
                 color: '#ffd700'

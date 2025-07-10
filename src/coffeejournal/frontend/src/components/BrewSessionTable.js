@@ -9,6 +9,7 @@ function BrewSessionTable({ sessions, onDelete, onDuplicate, onEdit, onRefresh, 
     bean_type: '',
     brew_method: '',
     recipe: '',
+    filter: '',
     sweetness: '',
     acidity: '',
     bitterness: '',
@@ -20,9 +21,13 @@ function BrewSessionTable({ sessions, onDelete, onDuplicate, onEdit, onRefresh, 
   const uniqueValues = useMemo(() => {
     const values = {
       roasters: [...new Set(sessions.map(s => s.product_details?.roaster).filter(Boolean))],
-      bean_types: [...new Set(sessions.map(s => s.product_details?.bean_type).filter(Boolean))],
+      bean_types: [...new Set(sessions.map(s => {
+        const beanType = s.product_details?.bean_type;
+        return Array.isArray(beanType) ? beanType : (beanType ? [beanType] : []);
+      }).flat().filter(Boolean))],
       brew_methods: [...new Set(sessions.map(s => s.brew_method).filter(Boolean))],
-      recipes: [...new Set(sessions.map(s => s.recipe).filter(Boolean))]
+      recipes: [...new Set(sessions.map(s => s.recipe).filter(Boolean))],
+      filters: [...new Set(sessions.map(s => s.filter).filter(Boolean))]
     };
     return values;
   }, [sessions]);
@@ -32,9 +37,14 @@ function BrewSessionTable({ sessions, onDelete, onDuplicate, onEdit, onRefresh, 
     let filtered = sessions.filter(session => {
       return (
         (!filters.roaster || session.product_details?.roaster?.toLowerCase().includes(filters.roaster.toLowerCase())) &&
-        (!filters.bean_type || session.product_details?.bean_type?.toLowerCase().includes(filters.bean_type.toLowerCase())) &&
+        (!filters.bean_type || (
+          Array.isArray(session.product_details?.bean_type) 
+            ? session.product_details.bean_type.some(bt => bt.toLowerCase().includes(filters.bean_type.toLowerCase()))
+            : session.product_details?.bean_type?.toLowerCase().includes(filters.bean_type.toLowerCase())
+        )) &&
         (!filters.brew_method || session.brew_method?.toLowerCase().includes(filters.brew_method.toLowerCase())) &&
         (!filters.recipe || session.recipe?.toLowerCase().includes(filters.recipe.toLowerCase())) &&
+        (!filters.filter || session.filter?.toLowerCase().includes(filters.filter.toLowerCase())) &&
         (!filters.sweetness || (session.sweetness && session.sweetness.toString() === filters.sweetness)) &&
         (!filters.acidity || (session.acidity && session.acidity.toString() === filters.acidity)) &&
         (!filters.bitterness || (session.bitterness && session.bitterness.toString() === filters.bitterness)) &&
@@ -50,8 +60,12 @@ function BrewSessionTable({ sessions, onDelete, onDuplicate, onEdit, onRefresh, 
 
       // Handle special cases
       if (sortColumn === 'bean_type') {
-        aVal = a.product_details?.bean_type || '';
-        bVal = b.product_details?.bean_type || '';
+        aVal = Array.isArray(a.product_details?.bean_type) 
+          ? a.product_details.bean_type.join(', ') 
+          : (a.product_details?.bean_type || '');
+        bVal = Array.isArray(b.product_details?.bean_type) 
+          ? b.product_details.bean_type.join(', ') 
+          : (b.product_details?.bean_type || '');
       } else if (sortColumn === 'product_name') {
         aVal = a.product_details?.product_name || '';
         bVal = b.product_details?.product_name || '';
@@ -167,6 +181,13 @@ function BrewSessionTable({ sessions, onDelete, onDuplicate, onEdit, onRefresh, 
             ))}
           </select>
           
+          <select value={filters.filter} onChange={(e) => handleFilterChange('filter', e.target.value)}>
+            <option value="">All Filters</option>
+            {uniqueValues.filters.map(filter => (
+              <option key={filter} value={filter}>{filter}</option>
+            ))}
+          </select>
+          
           <button 
             onClick={clearFilters} 
             style={{ padding: '6px 8px', border: 'none', background: 'none', cursor: 'pointer', fontSize: '14px' }}
@@ -217,6 +238,12 @@ function BrewSessionTable({ sessions, onDelete, onDuplicate, onEdit, onRefresh, 
                 onClick={() => handleSort('recipe')}
               >
                 Recipe{getSortIcon('recipe')}
+              </th>
+              <th 
+                style={{ padding: '4px', border: '1px solid #ddd', cursor: 'pointer', userSelect: 'none', fontSize: '12px', whiteSpace: 'nowrap', textAlign: 'left' }}
+                onClick={() => handleSort('filter')}
+              >
+                Filter{getSortIcon('filter')}
               </th>
               <th 
                 style={{ padding: '4px', border: '1px solid #ddd', cursor: 'pointer', userSelect: 'none', fontSize: '12px', whiteSpace: 'nowrap', textAlign: 'left' }}
@@ -338,7 +365,7 @@ function BrewSessionTable({ sessions, onDelete, onDuplicate, onEdit, onRefresh, 
                     maxWidth: '200px',
                     verticalAlign: 'top'
                   }}
-                  title={`${session.product_details?.product_name || 'Unknown'}\n\nBean Type: ${session.product_details?.bean_type || 'Unknown'}\nRoaster: ${session.product_details?.roaster || 'Unknown'}\nRoast Date: ${session.product_details?.roast_date ? formatDateNorwegian(session.product_details.roast_date) : 'Unknown'}`}
+                  title={`${session.product_details?.product_name || 'Unknown'}\n\nBean Type: ${Array.isArray(session.product_details?.bean_type) ? session.product_details.bean_type.join(', ') : (session.product_details?.bean_type || 'Unknown')}\nRoaster: ${session.product_details?.roaster || 'Unknown'}\nRoast Date: ${session.product_details?.roast_date ? formatDateNorwegian(session.product_details.roast_date) : 'Unknown'}`}
                 >
                   {session.product_details?.product_name || '-'}
                 </td>
@@ -350,6 +377,7 @@ function BrewSessionTable({ sessions, onDelete, onDuplicate, onEdit, onRefresh, 
                 </td>
                 <td style={{ padding: '4px', border: '1px solid #ddd', fontSize: '12px', verticalAlign: 'top', whiteSpace: 'nowrap' }}>{session.brew_method || '-'}</td>
                 <td style={{ padding: '4px', border: '1px solid #ddd', fontSize: '12px', verticalAlign: 'top', whiteSpace: 'nowrap' }}>{session.recipe || '-'}</td>
+                <td style={{ padding: '4px', border: '1px solid #ddd', fontSize: '12px', verticalAlign: 'top', whiteSpace: 'nowrap' }}>{session.filter || '-'}</td>
                 <td style={{ padding: '4px', border: '1px solid #ddd', fontSize: '12px', textAlign: 'center', verticalAlign: 'top', whiteSpace: 'nowrap' }}>
                   {session.amount_coffee_grams ? `${session.amount_coffee_grams}g` : '-'}
                 </td>

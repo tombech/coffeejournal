@@ -2,21 +2,34 @@
   {
     "roaster": "Blue Bottle Coffee",
     "roaster_id": 1,
-    "bean_type": "Arabica",
-    "bean_type_id": 1,
+    "bean_type": [
+      "Arabica",
+      "Robusta"
+    ],
+    "bean_type_id": [
+      1,
+      2,
+      5
+    ],
     "country": "Ethiopia",
     "country_id": 1,
-    "region": "Yirgacheffe",
-    "region_id": 11,
+    "region": [
+      "Yirgacheffe"
+    ],
+    "region_id": [
+      11
+    ],
     "product_name": "Yirgacheffe Single Origin",
     "roast_type": 3,
     "description": "Bright, floral Ethiopian coffee with citrus notes",
     "url": "https://bluebottlecoffee.com/coffee/yirgacheffe",
-    "image_url": null,
+    "image_url": "",
     "decaf": true,
     "decaf_method": "Swiss water method",
     "decaf_method_id": 1,
     "rating": 3.5,
+    "bean_process": "",
+    "notes": "",
     "id": 1
   },
   {
@@ -82,5 +95,33 @@
     "description": "Dark roasted Brazilian blend with nutty and chocolate notes",
     "url": "https://www.lacolombe.com/products/corsica",
     "image_url": null
+  },
+  {
+    "roaster": "Blue Bottle Coffee",
+    "roaster_id": 7,
+    "bean_type": [
+      "Replacement Arabica"
+    ],
+    "bean_type_id": [
+      6
+    ],
+    "country": [
+      "Ethiopia"
+    ],
+    "country_id": 13,
+    "region": [],
+    "region_id": [],
+    "product_name": "Test Coffee Product",
+    "roast_type": null,
+    "description": "Test product for usage checking",
+    "url": null,
+    "image_url": null,
+    "decaf": false,
+    "decaf_method": null,
+    "decaf_method_id": null,
+    "rating": null,
+    "bean_process": null,
+    "notes": null,
+    "id": 6
   }
 ]

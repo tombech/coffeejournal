@@ -17,6 +17,16 @@ function BrewSessionCard({ session, onDelete, onDuplicate }) {
     return `${minutes}:${String(seconds).padStart(2, '0')}`;
   };
 
+  // Norwegian date formatting
+  const formatDateNorwegian = (dateString) => {
+    if (!dateString) return 'N/A';
+    const date = new Date(dateString);
+    const day = date.getDate().toString().padStart(2, '0');
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const year = date.getFullYear().toString().slice(-2);
+    return `${day}.${month}.${year}`;
+  };
+
   if (isEditing) {
     return (
       <div className="card">
@@ -36,9 +46,10 @@ function BrewSessionCard({ session, onDelete, onDuplicate }) {
 
   return (
     <div className="card">
-      <h3>Brew Session - {new Date(session.timestamp).toLocaleString()}</h3>
-      <p><strong>Product:</strong> {session.product_details.roaster} - {session.product_details.bean_type} (Roast: {session.product_details.roast_date})</p>
+      <h3>Brew Session - {new Date(session.timestamp).toLocaleString('nb-NO')}</h3>
+      <p><strong>Product:</strong> {session.product_details.roaster} - {Array.isArray(session.product_details.bean_type) ? session.product_details.bean_type.join(', ') : (session.product_details.bean_type || 'Unknown')} (Roast: {formatDateNorwegian(session.product_details.roast_date)})</p>
       <p><strong>Method:</strong> {session.brew_method || 'N/A'} - <strong>Recipe:</strong> {session.recipe || 'N/A'}</p>
+      <p><strong>Equipment:</strong> Filter: {session.filter || 'N/A'}, Kettle: {session.kettle || 'N/A'}, Scale: {session.scale || 'N/A'}</p>
       <p>
         <strong>Coffee:</strong> {session.amount_coffee_grams || 'N/A'}g,
         <strong> Water:</strong> {session.amount_water_grams || 'N/A'}g,

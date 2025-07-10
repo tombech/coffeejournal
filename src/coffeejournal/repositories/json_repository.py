@@ -104,12 +104,14 @@ class JSONLookupRepository(JSONRepositoryBase, LookupRepository):
                 return item
         return None
     
-    def get_or_create(self, name: str) -> Dict[str, Any]:
+    def get_or_create(self, name: str, **kwargs) -> Dict[str, Any]:
         """Get existing entity by name or create new one."""
         existing = self.find_by_name(name)
         if existing:
             return existing
-        return self.create({'name': name})
+        data = {'name': name}
+        data.update(kwargs)
+        return self.create(data)
 
 
 class RoasterRepository(JSONLookupRepository):
@@ -229,3 +231,21 @@ class DecafMethodRepository(JSONLookupRepository):
     """Repository for DecafMethod entities."""
     def __init__(self, data_dir: str):
         super().__init__(data_dir, 'decaf_methods.json')
+
+
+class FilterRepository(JSONLookupRepository):
+    """Repository for Filter entities."""
+    def __init__(self, data_dir: str):
+        super().__init__(data_dir, 'filters.json')
+
+
+class KettleRepository(JSONLookupRepository):
+    """Repository for Kettle entities."""
+    def __init__(self, data_dir: str):
+        super().__init__(data_dir, 'kettles.json')
+
+
+class ScaleRepository(JSONLookupRepository):
+    """Repository for Scale entities."""
+    def __init__(self, data_dir: str):
+        super().__init__(data_dir, 'scales.json')
