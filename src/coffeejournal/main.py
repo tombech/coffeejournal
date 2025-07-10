@@ -45,6 +45,37 @@ def calculate_price_per_cup(price, amount_grams):
     return None
 
 
+def safe_float(value):
+    """Safely convert a value to float, returning None if conversion fails."""
+    if value is None or value == '':
+        return None
+    try:
+        return float(value)
+    except (ValueError, TypeError):
+        return None
+
+
+def safe_int(value):
+    """Safely convert a value to int, returning None if conversion fails."""
+    if value is None or value == '':
+        return None
+    try:
+        return int(value)
+    except (ValueError, TypeError):
+        return None
+
+
+def validate_tasting_score(score, field_name):
+    """Validate that a tasting score is within the 1-10 range."""
+    if score is None:
+        return None, None
+    
+    if not isinstance(score, int) or score < 1 or score > 10:
+        return None, f"{field_name} must be an integer between 1 and 10"
+    
+    return score, None
+
+
 # --- Lookup Endpoints ---
 
 # Roasters
@@ -1321,14 +1352,14 @@ def create_product():
         'region': regions,
         'region_id': region_ids,
         'product_name': data.get('product_name'),
-        'roast_type': data.get('roast_type'),
+        'roast_type': safe_int(data.get('roast_type')),
         'description': data.get('description'),
         'url': data.get('url'),
         'image_url': data.get('image_url'),
         'decaf': data.get('decaf', False),
         'decaf_method': decaf_method['name'] if decaf_method else None,
         'decaf_method_id': decaf_method['id'] if decaf_method else None,
-        'rating': data.get('rating'),
+        'rating': safe_int(data.get('rating')),
         'bean_process': data.get('bean_process'),
         'notes': data.get('notes')
     }
@@ -1404,14 +1435,14 @@ def update_product(product_id):
         'region': regions,
         'region_id': region_ids,
         'product_name': data.get('product_name'),
-        'roast_type': data.get('roast_type'),
+        'roast_type': safe_int(data.get('roast_type')),
         'description': data.get('description'),
         'url': data.get('url'),
         'image_url': data.get('image_url'),
         'decaf': data.get('decaf', False),
         'decaf_method': decaf_method['name'] if decaf_method else None,
         'decaf_method_id': decaf_method['id'] if decaf_method else None,
-        'rating': data.get('rating'),
+        'rating': safe_int(data.get('rating')),
         'bean_process': data.get('bean_process'),
         'notes': data.get('notes')
     }
@@ -1477,11 +1508,11 @@ def handle_product_batches(product_id):
             'product_id': product_id,  # Use product_id from URL
             'roast_date': data.get('roast_date'),
             'purchase_date': data.get('purchase_date'),
-            'amount_grams': data.get('amount_grams'),
-            'price': data.get('price'),
+            'amount_grams': safe_float(data.get('amount_grams')),
+            'price': safe_float(data.get('price')),
             'seller': data.get('seller'),
             'notes': data.get('notes'),
-            'rating': data.get('rating')
+            'rating': safe_int(data.get('rating'))
         }
         
         batch_repo = factory.get_batch_repository()
@@ -1539,11 +1570,11 @@ def update_batch(batch_id):
         'product_id': product_id,
         'roast_date': data.get('roast_date'),
         'purchase_date': data.get('purchase_date'),
-        'amount_grams': data.get('amount_grams'),
-        'price': data.get('price'),
+        'amount_grams': safe_float(data.get('amount_grams')),
+        'price': safe_float(data.get('price')),
         'seller': data.get('seller'),
         'notes': data.get('notes'),
-        'rating': data.get('rating')
+        'rating': safe_int(data.get('rating'))
     }
     
     batch = batch_repo.update(batch_id, batch_data)
@@ -1673,7 +1704,43 @@ def handle_batch_brew_sessions(batch_id):
         if data.get('scale'):
             scale = scale_repo.get_or_create(data['scale'])
         
-        # Extract fields from request
+        # Extract and validate fields from request
+        # Convert numeric fields with type safety
+        amount_coffee_grams = safe_float(data.get('amount_coffee_grams'))
+        amount_water_grams = safe_float(data.get('amount_water_grams'))
+        brew_temperature_c = safe_int(data.get('brew_temperature_c'))
+        bloom_time_seconds = safe_int(data.get('bloom_time_seconds'))
+        brew_time_seconds = safe_int(data.get('brew_time_seconds'))
+        score = safe_float(data.get('score'))
+        
+        # Validate tasting scores (1-10 range)
+        sweetness = safe_int(data.get('sweetness'))
+        acidity = safe_int(data.get('acidity'))
+        bitterness = safe_int(data.get('bitterness'))
+        body = safe_int(data.get('body'))
+        aroma = safe_int(data.get('aroma'))
+        flavor_profile_match = safe_int(data.get('flavor_profile_match'))
+        
+        # Validate tasting scores are in range
+        validation_errors = []
+        for field_name, field_value in [
+            ('sweetness', sweetness),
+            ('acidity', acidity),
+            ('bitterness', bitterness),
+            ('body', body),
+            ('aroma', aroma),
+            ('flavor_profile_match', flavor_profile_match)
+        ]:
+            if field_value is not None and (field_value < 1 or field_value > 10):
+                validation_errors.append(f"{field_name} must be between 1 and 10")
+        
+        # Validate overall score is in range (can be float)
+        if score is not None and (score < 1.0 or score > 10.0):
+            validation_errors.append("score must be between 1.0 and 10.0")
+        
+        if validation_errors:
+            return jsonify({'error': '; '.join(validation_errors)}), 400
+        
         session_data = {
             'timestamp': data.get('timestamp', datetime.utcnow().isoformat()),
             'product_batch_id': batch_id,  # Use batch_id from URL
@@ -1685,18 +1752,18 @@ def handle_batch_brew_sessions(batch_id):
             'filter_id': filter_type['id'] if filter_type else data.get('filter_id'),
             'kettle_id': kettle['id'] if kettle else data.get('kettle_id'),
             'scale_id': scale['id'] if scale else data.get('scale_id'),
-            'amount_coffee_grams': data.get('amount_coffee_grams'),
-            'amount_water_grams': data.get('amount_water_grams'),
-            'brew_temperature_c': data.get('brew_temperature_c'),
-            'bloom_time_seconds': data.get('bloom_time_seconds'),
-            'brew_time_seconds': data.get('brew_time_seconds'),
-            'sweetness': data.get('sweetness'),
-            'acidity': data.get('acidity'),
-            'bitterness': data.get('bitterness'),
-            'body': data.get('body'),
-            'aroma': data.get('aroma'),
-            'flavor_profile_match': data.get('flavor_profile_match'),
-            'score': data.get('score'),
+            'amount_coffee_grams': amount_coffee_grams,
+            'amount_water_grams': amount_water_grams,
+            'brew_temperature_c': brew_temperature_c,
+            'bloom_time_seconds': bloom_time_seconds,
+            'brew_time_seconds': brew_time_seconds,
+            'sweetness': sweetness,
+            'acidity': acidity,
+            'bitterness': bitterness,
+            'body': body,
+            'aroma': aroma,
+            'flavor_profile_match': flavor_profile_match,
+            'score': score,
             'notes': data.get('notes')
         }
         
@@ -1946,6 +2013,43 @@ def update_brew_session(session_id):
     if data.get('scale'):
         scale = scale_repo.get_or_create(data['scale'])
     
+    # Extract and validate fields from request
+    # Convert numeric fields with type safety
+    amount_coffee_grams = safe_float(data.get('amount_coffee_grams'))
+    amount_water_grams = safe_float(data.get('amount_water_grams'))
+    brew_temperature_c = safe_int(data.get('brew_temperature_c'))
+    bloom_time_seconds = safe_int(data.get('bloom_time_seconds'))
+    brew_time_seconds = safe_int(data.get('brew_time_seconds'))
+    score = safe_float(data.get('score'))
+    
+    # Validate tasting scores (1-10 range)
+    sweetness = safe_int(data.get('sweetness'))
+    acidity = safe_int(data.get('acidity'))
+    bitterness = safe_int(data.get('bitterness'))
+    body = safe_int(data.get('body'))
+    aroma = safe_int(data.get('aroma'))
+    flavor_profile_match = safe_int(data.get('flavor_profile_match'))
+    
+    # Validate tasting scores are in range
+    validation_errors = []
+    for field_name, field_value in [
+        ('sweetness', sweetness),
+        ('acidity', acidity),
+        ('bitterness', bitterness),
+        ('body', body),
+        ('aroma', aroma),
+        ('flavor_profile_match', flavor_profile_match)
+    ]:
+        if field_value is not None and (field_value < 1 or field_value > 10):
+            validation_errors.append(f"{field_name} must be between 1 and 10")
+    
+    # Validate overall score is in range (can be float)
+    if score is not None and (score < 1.0 or score > 10.0):
+        validation_errors.append("score must be between 1.0 and 10.0")
+    
+    if validation_errors:
+        return jsonify({'error': '; '.join(validation_errors)}), 400
+    
     # Update brew session
     session_data = {
         'timestamp': data.get('timestamp', existing_session['timestamp']),
@@ -1958,18 +2062,18 @@ def update_brew_session(session_id):
         'filter_id': filter_type['id'] if filter_type else None,
         'kettle_id': kettle['id'] if kettle else None,
         'scale_id': scale['id'] if scale else None,
-        'amount_coffee_grams': data.get('amount_coffee_grams'),
-        'amount_water_grams': data.get('amount_water_grams'),
-        'brew_temperature_c': data.get('brew_temperature_c'),
-        'bloom_time_seconds': data.get('bloom_time_seconds'),
-        'brew_time_seconds': data.get('brew_time_seconds'),
-        'sweetness': data.get('sweetness'),
-        'acidity': data.get('acidity'),
-        'bitterness': data.get('bitterness'),
-        'body': data.get('body'),
-        'aroma': data.get('aroma'),
-        'flavor_profile_match': data.get('flavor_profile_match'),
-        'score': data.get('score'),
+        'amount_coffee_grams': amount_coffee_grams,
+        'amount_water_grams': amount_water_grams,
+        'brew_temperature_c': brew_temperature_c,
+        'bloom_time_seconds': bloom_time_seconds,
+        'brew_time_seconds': brew_time_seconds,
+        'sweetness': sweetness,
+        'acidity': acidity,
+        'bitterness': bitterness,
+        'body': body,
+        'aroma': aroma,
+        'flavor_profile_match': flavor_profile_match,
+        'score': score,
         'notes': data.get('notes')
     }
     
