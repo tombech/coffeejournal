@@ -76,6 +76,58 @@ def validate_tasting_score(score, field_name):
     return score, None
 
 
+def enrich_brew_session_with_lookups(session, factory):
+    """Enrich a brew session with full lookup objects instead of just names."""
+    enriched = session.copy()
+    
+    # Get all repositories
+    brew_method_repo = factory.get_brew_method_repository()
+    recipe_repo = factory.get_recipe_repository()
+    grinder_repo = factory.get_grinder_repository()
+    filter_repo = factory.get_filter_repository()
+    kettle_repo = factory.get_kettle_repository()
+    scale_repo = factory.get_scale_repository()
+    
+    # Replace IDs with full objects
+    if session.get('brew_method_id'):
+        method = brew_method_repo.find_by_id(session['brew_method_id'])
+        enriched['brew_method'] = method if method else None
+    else:
+        enriched['brew_method'] = None
+        
+    if session.get('recipe_id'):
+        recipe = recipe_repo.find_by_id(session['recipe_id'])
+        enriched['recipe'] = recipe if recipe else None
+    else:
+        enriched['recipe'] = None
+        
+    if session.get('grinder_id'):
+        grinder = grinder_repo.find_by_id(session['grinder_id'])
+        enriched['grinder'] = grinder if grinder else None
+    else:
+        enriched['grinder'] = None
+        
+    if session.get('filter_id'):
+        filter_item = filter_repo.find_by_id(session['filter_id'])
+        enriched['filter'] = filter_item if filter_item else None
+    else:
+        enriched['filter'] = None
+        
+    if session.get('kettle_id'):
+        kettle = kettle_repo.find_by_id(session['kettle_id'])
+        enriched['kettle'] = kettle if kettle else None
+    else:
+        enriched['kettle'] = None
+        
+    if session.get('scale_id'):
+        scale = scale_repo.find_by_id(session['scale_id'])
+        enriched['scale'] = scale if scale else None
+    else:
+        enriched['scale'] = None
+    
+    return enriched
+
+
 # --- Lookup Endpoints ---
 
 # Roasters
@@ -1625,6 +1677,10 @@ def handle_batch_brew_sessions(batch_id):
         product_repo = factory.get_product_repository()
         brew_method_repo = factory.get_brew_method_repository()
         recipe_repo = factory.get_recipe_repository()
+        grinder_repo = factory.get_grinder_repository()
+        filter_repo = factory.get_filter_repository()
+        kettle_repo = factory.get_kettle_repository()
+        scale_repo = factory.get_scale_repository()
         
         # Enrich with product and batch information
         for session in sessions:
@@ -1633,33 +1689,42 @@ def handle_batch_brew_sessions(batch_id):
             if product:
                 session['product_name'] = f"{product.get('roaster', 'N/A')} - {product.get('bean_type', 'N/A')}"
             
-            # Add brew method, recipe, grinder, filter, kettle, and scale names
+            # Add brew method, recipe, grinder, filter, kettle, and scale objects
             if session.get('brew_method_id'):
                 method = brew_method_repo.find_by_id(session['brew_method_id'])
-                session['brew_method'] = method['name'] if method else None
+                session['brew_method'] = method if method else None
+            else:
+                session['brew_method'] = None
             
             if session.get('recipe_id'):
                 recipe = recipe_repo.find_by_id(session['recipe_id'])
-                session['recipe'] = recipe['name'] if recipe else None
+                session['recipe'] = recipe if recipe else None
+            else:
+                session['recipe'] = None
             
             if session.get('grinder_id'):
                 grinder = grinder_repo.find_by_id(session['grinder_id'])
-                session['grinder'] = grinder['name'] if grinder else None
+                session['grinder'] = grinder if grinder else None
+            else:
+                session['grinder'] = None
             
             if session.get('filter_id'):
-                filter_repo = factory.get_filter_repository()
                 filter_lookup = filter_repo.find_by_id(session['filter_id'])
-                session['filter'] = filter_lookup['name'] if filter_lookup else None
+                session['filter'] = filter_lookup if filter_lookup else None
+            else:
+                session['filter'] = None
             
             if session.get('kettle_id'):
-                kettle_repo = factory.get_kettle_repository()
                 kettle_lookup = kettle_repo.find_by_id(session['kettle_id'])
-                session['kettle'] = kettle_lookup['name'] if kettle_lookup else None
+                session['kettle'] = kettle_lookup if kettle_lookup else None
+            else:
+                session['kettle'] = None
             
             if session.get('scale_id'):
-                scale_repo = factory.get_scale_repository()
                 scale_lookup = scale_repo.find_by_id(session['scale_id'])
-                session['scale'] = scale_lookup['name'] if scale_lookup else None
+                session['scale'] = scale_lookup if scale_lookup else None
+            else:
+                session['scale'] = None
             
             # Calculate brew ratio
             session['brew_ratio'] = calculate_brew_ratio(session.get('amount_coffee_grams'), session.get('amount_water_grams'))
@@ -1682,27 +1747,27 @@ def handle_batch_brew_sessions(batch_id):
         
         brew_method = None
         if data.get('brew_method'):
-            brew_method = brew_method_repo.get_or_create(data['brew_method'])
+            brew_method = brew_method_repo.get_or_create_by_identifier(data['brew_method'])
         
         recipe = None
         if data.get('recipe'):
-            recipe = recipe_repo.get_or_create(data['recipe'])
+            recipe = recipe_repo.get_or_create_by_identifier(data['recipe'])
         
         grinder = None
         if data.get('grinder'):
-            grinder = grinder_repo.get_or_create(data['grinder'])
+            grinder = grinder_repo.get_or_create_by_identifier(data['grinder'])
         
         filter_type = None
         if data.get('filter'):
-            filter_type = filter_repo.get_or_create(data['filter'])
+            filter_type = filter_repo.get_or_create_by_identifier(data['filter'])
         
         kettle = None
         if data.get('kettle'):
-            kettle = kettle_repo.get_or_create(data['kettle'])
+            kettle = kettle_repo.get_or_create_by_identifier(data['kettle'])
         
         scale = None
         if data.get('scale'):
-            scale = scale_repo.get_or_create(data['scale'])
+            scale = scale_repo.get_or_create_by_identifier(data['scale'])
         
         # Extract and validate fields from request
         # Convert numeric fields with type safety
@@ -1776,42 +1841,54 @@ def handle_batch_brew_sessions(batch_id):
         if product:
             session['product_name'] = f"{product.get('roaster', 'N/A')} - {product.get('bean_type', 'N/A')}"
         
-        # Add brew method, recipe, grinder, filter, kettle, and scale names
+        # Add brew method, recipe, grinder, filter, kettle, and scale objects
         if brew_method:
-            session['brew_method'] = brew_method['name']
+            session['brew_method'] = brew_method
         elif session.get('brew_method_id'):
             method = brew_method_repo.find_by_id(session['brew_method_id'])
-            session['brew_method'] = method['name'] if method else None
+            session['brew_method'] = method if method else None
+        else:
+            session['brew_method'] = None
         
         if recipe:
-            session['recipe'] = recipe['name']
+            session['recipe'] = recipe
         elif session.get('recipe_id'):
             rec = recipe_repo.find_by_id(session['recipe_id'])
-            session['recipe'] = rec['name'] if rec else None
+            session['recipe'] = rec if rec else None
+        else:
+            session['recipe'] = None
         
         if grinder:
-            session['grinder'] = grinder['name']
+            session['grinder'] = grinder
         elif session.get('grinder_id'):
             grind = grinder_repo.find_by_id(session['grinder_id'])
-            session['grinder'] = grind['name'] if grind else None
+            session['grinder'] = grind if grind else None
+        else:
+            session['grinder'] = None
         
         if filter_type:
-            session['filter'] = filter_type['name']
+            session['filter'] = filter_type
         elif session.get('filter_id'):
             filt = filter_repo.find_by_id(session['filter_id'])
-            session['filter'] = filt['name'] if filt else None
+            session['filter'] = filt if filt else None
+        else:
+            session['filter'] = None
         
         if kettle:
-            session['kettle'] = kettle['name']
+            session['kettle'] = kettle
         elif session.get('kettle_id'):
             kett = kettle_repo.find_by_id(session['kettle_id'])
-            session['kettle'] = kett['name'] if kett else None
+            session['kettle'] = kett if kett else None
+        else:
+            session['kettle'] = None
         
         if scale:
-            session['scale'] = scale['name']
+            session['scale'] = scale
         elif session.get('scale_id'):
             sc = scale_repo.find_by_id(session['scale_id'])
-            session['scale'] = sc['name'] if sc else None
+            session['scale'] = sc if sc else None
+        else:
+            session['scale'] = None
         
         # Calculate brew ratio
         session['brew_ratio'] = calculate_brew_ratio(session.get('amount_coffee_grams'), session.get('amount_water_grams'))
@@ -1856,30 +1933,42 @@ def get_all_brew_sessions():
         else:
             session['product_details'] = {}
         
-        # Add brew method, recipe, grinder, filter, kettle, and scale names
+        # Add brew method, recipe, grinder, filter, kettle, and scale objects
         if session.get('brew_method_id'):
             method = brew_method_repo.find_by_id(session['brew_method_id'])
-            session['brew_method'] = method['name'] if method else None
+            session['brew_method'] = method if method else None
+        else:
+            session['brew_method'] = None
         
         if session.get('recipe_id'):
             recipe = recipe_repo.find_by_id(session['recipe_id'])
-            session['recipe'] = recipe['name'] if recipe else None
+            session['recipe'] = recipe if recipe else None
+        else:
+            session['recipe'] = None
         
         if session.get('grinder_id'):
             grinder = grinder_repo.find_by_id(session['grinder_id'])
-            session['grinder'] = grinder['name'] if grinder else None
+            session['grinder'] = grinder if grinder else None
+        else:
+            session['grinder'] = None
         
         if session.get('filter_id'):
             filter_lookup = filter_repo.find_by_id(session['filter_id'])
-            session['filter'] = filter_lookup['name'] if filter_lookup else None
+            session['filter'] = filter_lookup if filter_lookup else None
+        else:
+            session['filter'] = None
         
         if session.get('kettle_id'):
             kettle_lookup = kettle_repo.find_by_id(session['kettle_id'])
-            session['kettle'] = kettle_lookup['name'] if kettle_lookup else None
+            session['kettle'] = kettle_lookup if kettle_lookup else None
+        else:
+            session['kettle'] = None
         
         if session.get('scale_id'):
             scale_lookup = scale_repo.find_by_id(session['scale_id'])
-            session['scale'] = scale_lookup['name'] if scale_lookup else None
+            session['scale'] = scale_lookup if scale_lookup else None
+        else:
+            session['scale'] = None
         
         # Calculate brew ratio using consistent field names
         session['brew_ratio'] = calculate_brew_ratio(session.get('amount_coffee_grams'), session.get('amount_water_grams'))
@@ -1923,34 +2012,46 @@ def get_brew_session(session_id):
     else:
         session['product_details'] = {}
     
-    # Add brew method, recipe, grinder, filter, kettle, and scale names
+    # Add brew method, recipe, grinder, filter, kettle, and scale objects
     if session.get('brew_method_id'):
         brew_method = brew_method_repo.find_by_id(session['brew_method_id'])
-        session['brew_method'] = brew_method['name'] if brew_method else None
+        session['brew_method'] = brew_method if brew_method else None
+    else:
+        session['brew_method'] = None
     
     if session.get('recipe_id'):
         recipe = recipe_repo.find_by_id(session['recipe_id'])
-        session['recipe'] = recipe['name'] if recipe else None
+        session['recipe'] = recipe if recipe else None
+    else:
+        session['recipe'] = None
     
     if session.get('grinder_id'):
         grinder_repo = factory.get_grinder_repository()
         grinder = grinder_repo.find_by_id(session['grinder_id'])
-        session['grinder'] = grinder['name'] if grinder else None
+        session['grinder'] = grinder if grinder else None
+    else:
+        session['grinder'] = None
     
     if session.get('filter_id'):
         filter_repo = factory.get_filter_repository()
         filter_lookup = filter_repo.find_by_id(session['filter_id'])
-        session['filter'] = filter_lookup['name'] if filter_lookup else None
+        session['filter'] = filter_lookup if filter_lookup else None
+    else:
+        session['filter'] = None
     
     if session.get('kettle_id'):
         kettle_repo = factory.get_kettle_repository()
         kettle_lookup = kettle_repo.find_by_id(session['kettle_id'])
-        session['kettle'] = kettle_lookup['name'] if kettle_lookup else None
+        session['kettle'] = kettle_lookup if kettle_lookup else None
+    else:
+        session['kettle'] = None
     
     if session.get('scale_id'):
         scale_repo = factory.get_scale_repository()
         scale_lookup = scale_repo.find_by_id(session['scale_id'])
-        session['scale'] = scale_lookup['name'] if scale_lookup else None
+        session['scale'] = scale_lookup if scale_lookup else None
+    else:
+        session['scale'] = None
     
     return jsonify(session)
 
@@ -1991,27 +2092,27 @@ def update_brew_session(session_id):
     
     brew_method = None
     if data.get('brew_method'):
-        brew_method = brew_method_repo.get_or_create(data['brew_method'])
+        brew_method = brew_method_repo.get_or_create_by_identifier(data['brew_method'])
     
     recipe = None
     if data.get('recipe'):
-        recipe = recipe_repo.get_or_create(data['recipe'])
+        recipe = recipe_repo.get_or_create_by_identifier(data['recipe'])
     
     grinder = None
     if data.get('grinder'):
-        grinder = grinder_repo.get_or_create(data['grinder'])
+        grinder = grinder_repo.get_or_create_by_identifier(data['grinder'])
     
     filter_type = None
     if data.get('filter'):
-        filter_type = filter_repo.get_or_create(data['filter'])
+        filter_type = filter_repo.get_or_create_by_identifier(data['filter'])
     
     kettle = None
     if data.get('kettle'):
-        kettle = kettle_repo.get_or_create(data['kettle'])
+        kettle = kettle_repo.get_or_create_by_identifier(data['kettle'])
     
     scale = None
     if data.get('scale'):
-        scale = scale_repo.get_or_create(data['scale'])
+        scale = scale_repo.get_or_create_by_identifier(data['scale'])
     
     # Extract and validate fields from request
     # Convert numeric fields with type safety
@@ -2084,31 +2185,39 @@ def update_brew_session(session_id):
         session.get('amount_coffee_grams'),
         session.get('amount_water_grams')
     )
-    session['brew_method'] = brew_method['name'] if brew_method else None
-    session['recipe'] = recipe['name'] if recipe else None
+    session['brew_method'] = brew_method if brew_method else None
+    session['recipe'] = recipe if recipe else None
     if grinder:
-        session['grinder'] = grinder['name']
+        session['grinder'] = grinder
     elif session.get('grinder_id'):
         grinder_lookup = grinder_repo.find_by_id(session['grinder_id'])
-        session['grinder'] = grinder_lookup['name'] if grinder_lookup else None
+        session['grinder'] = grinder_lookup if grinder_lookup else None
+    else:
+        session['grinder'] = None
     
     if filter_type:
-        session['filter'] = filter_type['name']
+        session['filter'] = filter_type
     elif session.get('filter_id'):
         filter_lookup = filter_repo.find_by_id(session['filter_id'])
-        session['filter'] = filter_lookup['name'] if filter_lookup else None
+        session['filter'] = filter_lookup if filter_lookup else None
+    else:
+        session['filter'] = None
     
     if kettle:
-        session['kettle'] = kettle['name']
+        session['kettle'] = kettle
     elif session.get('kettle_id'):
         kettle_lookup = kettle_repo.find_by_id(session['kettle_id'])
-        session['kettle'] = kettle_lookup['name'] if kettle_lookup else None
+        session['kettle'] = kettle_lookup if kettle_lookup else None
+    else:
+        session['kettle'] = None
     
     if scale:
-        session['scale'] = scale['name']
+        session['scale'] = scale
     elif session.get('scale_id'):
         scale_lookup = scale_repo.find_by_id(session['scale_id'])
-        session['scale'] = scale_lookup['name'] if scale_lookup else None
+        session['scale'] = scale_lookup if scale_lookup else None
+    else:
+        session['scale'] = None
     session['product_details'] = {
         'roaster': product.get('roaster'),
         'bean_type': product.get('bean_type'),

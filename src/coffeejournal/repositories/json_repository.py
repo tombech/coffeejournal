@@ -104,12 +104,43 @@ class JSONLookupRepository(JSONRepositoryBase, LookupRepository):
                 return item
         return None
     
+    def find_by_short_form(self, short_form: str) -> Optional[Dict[str, Any]]:
+        """Find entity by short_form."""
+        if not short_form:  # Skip empty strings and None
+            return None
+        data = self._read_data()
+        for item in data:
+            if item.get('short_form') == short_form:
+                return item
+        return None
+    
+    def find_by_name_or_short_form(self, identifier: str) -> Optional[Dict[str, Any]]:
+        """Find entity by name or short_form."""
+        # Try name first
+        result = self.find_by_name(identifier)
+        if result:
+            return result
+        # Then try short_form
+        return self.find_by_short_form(identifier)
+    
     def get_or_create(self, name: str, **kwargs) -> Dict[str, Any]:
         """Get existing entity by name or create new one."""
         existing = self.find_by_name(name)
         if existing:
             return existing
         data = {'name': name}
+        data.update(kwargs)
+        return self.create(data)
+    
+    def get_or_create_by_identifier(self, identifier: str, **kwargs) -> Dict[str, Any]:
+        """Get existing entity by name or short_form, or create new one."""
+        # First try to find by name or short_form
+        existing = self.find_by_name_or_short_form(identifier)
+        if existing:
+            return existing
+        
+        # If not found, create new one with the identifier as name
+        data = {'name': identifier}
         data.update(kwargs)
         return self.create(data)
 

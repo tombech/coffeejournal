@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { API_BASE_URL } from '../config';
 
-function BrewSessionTable({ sessions, onDelete, onDuplicate, onEdit, onRefresh, showNewForm, setShowNewForm, setEditingSession, showActions = true, showFilters = true, showAddButton = true, showProduct = true, title = null }) {
+function BrewSessionTable({ sessions, onDelete, onDuplicate, onEdit, onRefresh, showNewForm, setShowNewForm, setEditingSession, showActions = true, showFilters = true, showAddButton = true, showProduct = true, title = null, preserveOrder = false, initialSort = 'timestamp', initialSortDirection = 'desc' }) {
   
   // Calculate comprehensive score for brew sessions
   const calculateBrewScore = (session) => {
@@ -33,8 +33,13 @@ function BrewSessionTable({ sessions, onDelete, onDuplicate, onEdit, onRefresh, 
   }));
 
   // Function to get short name for lookup items
-  const getShortName = (fullName) => {
+  const getShortName = (fullName, shortForm = null) => {
     if (!fullName) return '';
+    
+    // Use explicitly set short_form if available
+    if (shortForm) {
+      return shortForm;
+    }
     
     // Predefined short names for common items
     const shortNameMap = {
@@ -72,8 +77,8 @@ function BrewSessionTable({ sessions, onDelete, onDuplicate, onEdit, onRefresh, 
       return words.map(w => w.charAt(0)).join('').substring(0, 4);
     }
   };
-  const [sortColumn, setSortColumn] = useState('timestamp');
-  const [sortDirection, setSortDirection] = useState('desc'); // newest first by default
+  const [sortColumn, setSortColumn] = useState(initialSort);
+  const [sortDirection, setSortDirection] = useState(initialSortDirection);
   const [filters, setFilters] = useState({
     roaster: '',
     bean_type: '',
@@ -111,9 +116,9 @@ function BrewSessionTable({ sessions, onDelete, onDuplicate, onEdit, onRefresh, 
         const beanType = s.product_details?.bean_type;
         return Array.isArray(beanType) ? beanType : (beanType ? [beanType] : []);
       }).flat().filter(Boolean))],
-      brew_methods: [...new Set(sessionsWithScore.map(s => s.brew_method).filter(Boolean))],
-      recipes: [...new Set(sessionsWithScore.map(s => s.recipe).filter(Boolean))],
-      filters: [...new Set(sessionsWithScore.map(s => s.filter).filter(Boolean))]
+      brew_methods: [...new Set(sessionsWithScore.map(s => s.brew_method?.name).filter(Boolean))],
+      recipes: [...new Set(sessionsWithScore.map(s => s.recipe?.name).filter(Boolean))],
+      filters: [...new Set(sessionsWithScore.map(s => s.filter?.name).filter(Boolean))]
     };
     return values;
   }, [sessionsWithScore]);
@@ -128,9 +133,9 @@ function BrewSessionTable({ sessions, onDelete, onDuplicate, onEdit, onRefresh, 
             ? session.product_details?.bean_type.some(bt => bt.toLowerCase().includes(filters.bean_type.toLowerCase()))
             : session.product_details?.bean_type?.toLowerCase().includes(filters.bean_type.toLowerCase())
         )) &&
-        (!filters.brew_method || session.brew_method?.toLowerCase().includes(filters.brew_method.toLowerCase())) &&
-        (!filters.recipe || session.recipe?.toLowerCase().includes(filters.recipe.toLowerCase())) &&
-        (!filters.filter || session.filter?.toLowerCase().includes(filters.filter.toLowerCase())) &&
+        (!filters.brew_method || session.brew_method?.name?.toLowerCase().includes(filters.brew_method.toLowerCase())) &&
+        (!filters.recipe || session.recipe?.name?.toLowerCase().includes(filters.recipe.toLowerCase())) &&
+        (!filters.filter || session.filter?.name?.toLowerCase().includes(filters.filter.toLowerCase())) &&
         (!filters.sweetness || (session.sweetness && session.sweetness.toString() === filters.sweetness)) &&
         (!filters.acidity || (session.acidity && session.acidity.toString() === filters.acidity)) &&
         (!filters.bitterness || (session.bitterness && session.bitterness.toString() === filters.bitterness)) &&
@@ -139,7 +144,11 @@ function BrewSessionTable({ sessions, onDelete, onDuplicate, onEdit, onRefresh, 
       );
     });
 
-    // Sort the filtered results
+    // Sort the filtered results (unless preserveOrder is true)
+    if (preserveOrder) {
+      return filtered;
+    }
+    
     return filtered.sort((a, b) => {
       let aVal = a[sortColumn];
       let bVal = b[sortColumn];
@@ -173,7 +182,7 @@ function BrewSessionTable({ sessions, onDelete, onDuplicate, onEdit, onRefresh, 
       if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1;
       return 0;
     });
-  }, [sessionsWithScore, filters, sortColumn, sortDirection]);
+  }, [sessionsWithScore, filters, sortColumn, sortDirection, preserveOrder]);
 
   const handleSort = (column) => {
     if (sortColumn === column) {
@@ -428,14 +437,14 @@ function BrewSessionTable({ sessions, onDelete, onDuplicate, onEdit, onRefresh, 
                 >
                   {formatDateNorwegian(session.timestamp)}
                 </td>
-                <td style={{ padding: '4px', border: '1px solid #ddd', fontSize: '12px', verticalAlign: 'top', whiteSpace: 'nowrap' }} title={session.brew_method}>
-                  {session.brew_method ? getShortName(session.brew_method) : '-'}
+                <td style={{ padding: '4px', border: '1px solid #ddd', fontSize: '12px', verticalAlign: 'top', whiteSpace: 'nowrap' }} title={session.brew_method?.name || ''}>
+                  {session.brew_method ? getShortName(session.brew_method.name, session.brew_method.short_form) : '-'}
                 </td>
-                <td style={{ padding: '4px', border: '1px solid #ddd', fontSize: '12px', verticalAlign: 'top', whiteSpace: 'nowrap' }} title={session.recipe}>
-                  {session.recipe ? getShortName(session.recipe) : '-'}
+                <td style={{ padding: '4px', border: '1px solid #ddd', fontSize: '12px', verticalAlign: 'top', whiteSpace: 'nowrap' }} title={session.recipe?.name || ''}>
+                  {session.recipe ? getShortName(session.recipe.name, session.recipe.short_form) : '-'}
                 </td>
-                <td style={{ padding: '4px', border: '1px solid #ddd', fontSize: '12px', verticalAlign: 'top', whiteSpace: 'nowrap' }} title={session.filter}>
-                  {session.filter ? getShortName(session.filter) : '-'}
+                <td style={{ padding: '4px', border: '1px solid #ddd', fontSize: '12px', verticalAlign: 'top', whiteSpace: 'nowrap' }} title={session.filter?.name || ''}>
+                  {session.filter ? getShortName(session.filter.name, session.filter.short_form) : '-'}
                 </td>
                 <td style={{ padding: '4px', border: '1px solid #ddd', fontSize: '12px', textAlign: 'center', verticalAlign: 'top', whiteSpace: 'nowrap' }}>
                   {session.amount_coffee_grams ? `${session.amount_coffee_grams}g` : '-'}
@@ -458,12 +467,13 @@ function BrewSessionTable({ sessions, onDelete, onDuplicate, onEdit, onRefresh, 
                 <td style={{ padding: '4px', border: '1px solid #ddd', fontSize: '12px', textAlign: 'center', verticalAlign: 'top', whiteSpace: 'nowrap' }}>{session.bitterness || '-'}</td>
                 <td style={{ padding: '4px', border: '1px solid #ddd', fontSize: '12px', textAlign: 'center', verticalAlign: 'top', whiteSpace: 'nowrap' }}>{session.body || '-'}</td>
                 <td style={{ padding: '4px', border: '1px solid #ddd', fontSize: '12px', textAlign: 'center', verticalAlign: 'top', whiteSpace: 'nowrap' }}>{session.aroma || '-'}</td>
-                <td style={{ padding: '4px', border: '1px solid #ddd', fontSize: '12px', verticalAlign: 'top', whiteSpace: 'nowrap' }} title={session.grinder}>
-                  {session.grinder ? getShortName(session.grinder) : '-'}
+                <td style={{ padding: '4px', border: '1px solid #ddd', fontSize: '12px', verticalAlign: 'top', whiteSpace: 'nowrap' }} title={session.grinder?.name || ''}>
+                  {session.grinder ? getShortName(session.grinder.name, session.grinder.short_form) : '-'}
                 </td>
                 <td style={{ padding: '4px', border: '1px solid #ddd', fontSize: '12px', verticalAlign: 'top', whiteSpace: 'nowrap' }}>{session.grinder_setting || '-'}</td>
                 <td style={{ padding: '4px', border: '1px solid #ddd', fontSize: '12px', textAlign: 'center', verticalAlign: 'top', whiteSpace: 'nowrap', fontWeight: 'bold' }}>
-                  {(typeof session.calculatedScore === 'number' && session.calculatedScore > 0) ? session.calculatedScore.toFixed(1) : '-'}
+                  {(typeof session.calculatedScore === 'number' && session.calculatedScore > 0) ? session.calculatedScore.toFixed(1) : 
+                   (console.log('DEBUG Score:', session.id, 'calculatedScore:', session.calculatedScore, 'type:', typeof session.calculatedScore, 'score:', session.score, 'tasting:', {sweetness: session.sweetness, acidity: session.acidity, bitterness: session.bitterness, body: session.body, aroma: session.aroma}), '-')}
                 </td>
                 <td 
                   style={{ 

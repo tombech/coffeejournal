@@ -167,7 +167,7 @@ function Home() {
       }
     });
 
-    return Object.entries(productScores)
+    const result = Object.entries(productScores)
       .map(([productId, data]) => {
         // Calculate tasting averages for mini radar chart
         const validSessions = data.sessions.filter(session => 
@@ -204,7 +204,9 @@ function Home() {
           averages
         };
       })
-      .filter(item => item.product && item.sessionCount >= 1) // At least 1 session
+      .filter(item => item.product && item.sessionCount >= 1); // At least 1 session
+    
+    return result
       .sort((a, b) => b.averageScore - a.averageScore)
       .slice(0, 5);
   };
@@ -234,6 +236,9 @@ function Home() {
   // Mini radar chart component for products
   const MiniRadarChart = ({ data, size = 240 }) => {
     if (!data) return null;
+    
+    // Debug: Log radar chart data
+    console.log('DEBUG Radar Chart data:', data);
     
     const center = size / 2;
     const maxRadius = 80;
@@ -355,6 +360,9 @@ function Home() {
             showActions={false}
             showFilters={false}
             showAddButton={false}
+            preserveOrder={true}
+            initialSort="calculatedScore"
+            initialSortDirection="desc"
             onDelete={() => {}}
             onDuplicate={() => {}}
             onEdit={() => {}}
@@ -368,6 +376,9 @@ function Home() {
             showActions={false}
             showFilters={false}
             showAddButton={false}
+            preserveOrder={true}
+            initialSort="calculatedScore"
+            initialSortDirection="asc"
             onDelete={() => {}}
             onDuplicate={() => {}}
             onEdit={() => {}}

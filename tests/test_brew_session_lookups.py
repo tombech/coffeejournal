@@ -110,9 +110,9 @@ class TestBrewSessionLookups:
         created_session = next(s for s in sessions if s['id'] == session_id)
         
         # Verify enriched fields
-        assert created_session['brew_method'] == 'Chemex'
-        assert created_session['recipe'] == 'Slow Pour'
-        assert created_session['grinder'] == 'Baratza'
+        assert created_session['brew_method']['name'] == 'Chemex'
+        assert created_session['recipe']['name'] == 'Slow Pour'
+        assert created_session['grinder']['name'] == 'Baratza'
         
         # Verify ID fields are still there
         assert created_session['brew_method_id'] == brew_method_id
@@ -229,5 +229,5 @@ class TestBrewSessionLookups:
         updated_session = next(s for s in sessions if s['id'] == session_id)
         
         # The enriched name should reflect the updated name
-        assert updated_session['brew_method'] == 'Updated Name'
+        assert updated_session['brew_method']['name'] == 'Updated Name'
         assert updated_session['brew_method_id'] == brew_method_id

@@ -1,34 +1,42 @@
 [
   {
     "id": 1,
-    "name": "V60"
+    "name": "V60",
+    "short_form": "V60"
   },
   {
     "id": 2,
-    "name": "Chemex"
+    "name": "Chemex",
+    "short_form": "Cmx"
   },
   {
     "id": 3,
-    "name": "French Press"
+    "name": "French Press",
+    "short_form": "FP"
   },
   {
     "id": 4,
-    "name": "AeroPress"
+    "name": "AeroPress",
+    "short_form": "AP"
   },
   {
     "id": 5,
-    "name": "Espresso"
+    "name": "Espresso",
+    "short_form": "Esp"
   },
   {
     "id": 6,
-    "name": "Pour Over"
+    "name": "Pour Over",
+    "short_form": "PO"
   },
   {
     "id": 7,
-    "name": "Cold Brew"
+    "name": "Cold Brew",
+    "short_form": "CB"
   },
   {
     "id": 8,
-    "name": "Moka Pot"
+    "name": "Moka Pot",
+    "short_form": "MP"
   }
 ]
