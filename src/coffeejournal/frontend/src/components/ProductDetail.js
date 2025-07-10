@@ -192,16 +192,24 @@ function ProductDetail() {
   // Get top 5 brew sessions
   const getTopBrewSessions = () => {
     return brewSessions
-      .filter(session => calculateBrewScore(session) > 0)
-      .sort((a, b) => calculateBrewScore(b) - calculateBrewScore(a))
+      .map(session => ({
+        ...session,
+        calculatedScore: calculateBrewScore(session)
+      }))
+      .filter(session => session.calculatedScore > 0)
+      .sort((a, b) => b.calculatedScore - a.calculatedScore)
       .slice(0, 5);
   };
 
   // Get bottom 5 brew sessions
   const getBottomBrewSessions = () => {
     return brewSessions
-      .filter(session => calculateBrewScore(session) > 0)
-      .sort((a, b) => calculateBrewScore(a) - calculateBrewScore(b))
+      .map(session => ({
+        ...session,
+        calculatedScore: calculateBrewScore(session)
+      }))
+      .filter(session => session.calculatedScore > 0)
+      .sort((a, b) => a.calculatedScore - b.calculatedScore)
       .slice(0, 5);
   };
 
