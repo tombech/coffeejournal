@@ -331,7 +331,10 @@ function Home() {
       <p>Your 15 most recent brew sessions:</p>
       
       <BrewSessionTable
-        sessions={sessions}
+        sessions={sessions.map(session => ({
+          ...session,
+          calculatedScore: calculateBrewScore(session)
+        }))}
         onDelete={handleDelete}
         onDuplicate={handleDuplicate}
         onEdit={handleEdit}
