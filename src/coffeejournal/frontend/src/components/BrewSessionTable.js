@@ -111,10 +111,10 @@ function BrewSessionTable({ sessions, onDelete, onDuplicate, onEdit, onRefresh, 
   // Get unique values for filter dropdowns
   const uniqueValues = useMemo(() => {
     const values = {
-      roasters: [...new Set(sessionsWithScore.map(s => s.product_details?.roaster).filter(Boolean))],
+      roasters: [...new Set(sessionsWithScore.map(s => s.product_details?.roaster?.name).filter(Boolean))],
       bean_types: [...new Set(sessionsWithScore.map(s => {
         const beanType = s.product_details?.bean_type;
-        return Array.isArray(beanType) ? beanType : (beanType ? [beanType] : []);
+        return Array.isArray(beanType) ? beanType.map(bt => bt.name) : [];
       }).flat().filter(Boolean))],
       brew_methods: [...new Set(sessionsWithScore.map(s => s.brew_method?.name).filter(Boolean))],
       recipes: [...new Set(sessionsWithScore.map(s => s.recipe?.name).filter(Boolean))],
@@ -127,11 +127,11 @@ function BrewSessionTable({ sessions, onDelete, onDuplicate, onEdit, onRefresh, 
   const filteredAndSortedSessions = useMemo(() => {
     let filtered = sessionsWithScore.filter(session => {
       return (
-        (!filters.roaster || session.product_details?.roaster?.toLowerCase().includes(filters.roaster.toLowerCase())) &&
+        (!filters.roaster || session.product_details?.roaster?.name?.toLowerCase().includes(filters.roaster.toLowerCase())) &&
         (!filters.bean_type || (
           Array.isArray(session.product_details?.bean_type) 
-            ? session.product_details?.bean_type.some(bt => bt.toLowerCase().includes(filters.bean_type.toLowerCase()))
-            : session.product_details?.bean_type?.toLowerCase().includes(filters.bean_type.toLowerCase())
+            ? session.product_details?.bean_type.some(bt => bt.name?.toLowerCase().includes(filters.bean_type.toLowerCase()))
+            : false
         )) &&
         (!filters.brew_method || session.brew_method?.name?.toLowerCase().includes(filters.brew_method.toLowerCase())) &&
         (!filters.recipe || session.recipe?.name?.toLowerCase().includes(filters.recipe.toLowerCase())) &&
@@ -156,11 +156,11 @@ function BrewSessionTable({ sessions, onDelete, onDuplicate, onEdit, onRefresh, 
       // Handle special cases
       if (sortColumn === 'bean_type') {
         aVal = Array.isArray(a.product_details?.bean_type) 
-          ? a.product_details?.bean_type.join(', ') 
-          : (a.product_details?.bean_type || '');
+          ? a.product_details?.bean_type.map(bt => bt.name).join(', ') 
+          : '';
         bVal = Array.isArray(b.product_details?.bean_type) 
-          ? b.product_details?.bean_type.join(', ') 
-          : (b.product_details?.bean_type || '');
+          ? b.product_details?.bean_type.map(bt => bt.name).join(', ') 
+          : '';
       } else if (sortColumn === 'product_name') {
         aVal = a.product_details?.product_name || '';
         bVal = b.product_details?.product_name || '';
@@ -425,7 +425,7 @@ function BrewSessionTable({ sessions, onDelete, onDuplicate, onEdit, onRefresh, 
                     maxWidth: '200px',
                     verticalAlign: 'top'
                   }}
-                  title={`${session.product_details?.product_name || 'Unknown'}\n\nBean Type: ${Array.isArray(session.product_details?.bean_type) ? session.product_details?.bean_type.join(', ') : (session.product_details?.bean_type || 'Unknown')}\nRoaster: ${session.product_details?.roaster || 'Unknown'}\nRoast Date: ${session.product_details?.roast_date ? formatDateNorwegian(session.product_details?.roast_date) : 'Unknown'}${isDecafProduct(session) ? '\n\n⚠️ DECAF PRODUCT' : ''}`}
+                  title={`${session.product_details?.product_name || 'Unknown'}\n\nBean Type: ${Array.isArray(session.product_details?.bean_type) ? session.product_details?.bean_type.map(bt => bt.name).join(', ') : 'Unknown'}\nRoaster: ${session.product_details?.roaster?.name || 'Unknown'}\nRoast Date: ${session.product_details?.roast_date ? formatDateNorwegian(session.product_details?.roast_date) : 'Unknown'}${isDecafProduct(session) ? '\n\n⚠️ DECAF PRODUCT' : ''}`}
                 >
                   {session.product_details?.product_name || '-'}
                   {isDecafProduct(session) && <span style={{ marginLeft: '4px', color: '#ff6b35' }} title="Decaf Product">D</span>}
