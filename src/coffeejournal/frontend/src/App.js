@@ -35,7 +35,7 @@ function App() {
             </nav>
           </header>
 
-          <main className="App-main">
+          <main className="App-main" data-testid="app-main">
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/products" element={<ProductList />} />

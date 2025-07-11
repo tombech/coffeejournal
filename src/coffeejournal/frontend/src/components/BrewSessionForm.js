@@ -239,7 +239,11 @@ function BrewSessionForm({ product_batch_id = null, onSessionSubmitted, initialD
                 <option value="">Select a product</option>
                 {products.map((product) => (
                   <option key={product.id} value={product.id}>
-                    {product.product_name} ({product.roaster})
+                    {product.product_name} ({
+                      typeof product.roaster === 'object' 
+                        ? product.roaster?.name || 'Unknown'
+                        : product.roaster || 'Unknown'
+                    })
                   </option>
                 ))}
               </select>

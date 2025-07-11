@@ -1,0 +1,43 @@
+{
+  "products": [
+    {
+      "id": 1,
+      "product_name": "Test Coffee",
+      "roaster": {
+        "id": 1,
+        "name": "Blue Bottle Coffee"
+      },
+      "bean_type": [
+        {
+          "id": 1,
+          "name": "Arabica"
+        }
+      ],
+      "country": {
+        "id": 1,
+        "name": "Ethiopia"
+      },
+      "decaf": false
+    }
+  ],
+  "roasters": [
+    {
+      "id": 1,
+      "name": "Blue Bottle Coffee"
+    },
+    {
+      "id": 2,
+      "name": "Intelligentsia"
+    }
+  ],
+  "brew_methods": [
+    {
+      "id": 1,
+      "name": "V60"
+    },
+    {
+      "id": 2,
+      "name": "French Press"
+    }
+  ]
+}
