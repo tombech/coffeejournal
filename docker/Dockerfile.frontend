@@ -8,7 +8,8 @@ WORKDIR /app
 COPY src/coffeejournal/frontend/package*.json ./
 
 # Install all dependencies (including dev dependencies needed for build)
-RUN npm ci
+# Using npm install instead of npm ci to handle potential lock file mismatches
+RUN npm install
 
 # Set API URL to use nginx proxy
 ENV REACT_APP_API_URL=/api
