@@ -601,6 +601,7 @@ function ProductDetail() {
             showActions={false}
             showFilters={false}
             showAddButton={false}
+            preserveOrder={true}
             onDelete={() => {}}
             onDuplicate={() => {}}
             onEdit={() => {}}
@@ -614,6 +615,7 @@ function ProductDetail() {
             showActions={false}
             showFilters={false}
             showAddButton={false}
+            preserveOrder={true}
             onDelete={() => {}}
             onDuplicate={() => {}}
             onEdit={() => {}}
