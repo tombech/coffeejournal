@@ -247,8 +247,8 @@ class TestUpdateReferences:
         # Verify products have empty roaster
         product1 = client.get(f'/api/products/{product1_response.get_json()["id"]}').get_json()
         product2 = client.get(f'/api/products/{product2_response.get_json()["id"]}').get_json()
-        assert product1['roaster'] == ''
-        assert product2['roaster'] == ''
+        assert product1['roaster'] is None
+        assert product2['roaster'] is None
     
     def test_roaster_update_references_replace(self, client):
         """Test replacing roaster references in products."""
@@ -277,7 +277,7 @@ class TestUpdateReferences:
         
         # Verify product now uses the replacement roaster
         product1 = client.get(f'/api/products/{product1_response.get_json()["id"]}').get_json()
-        assert product1['roaster'] == 'Roaster 2'
+        assert product1['roaster']['name'] == 'Roaster 2'
     
     def test_bean_type_update_references_remove(self, client):
         """Test removing bean type references from products."""
@@ -311,8 +311,9 @@ class TestUpdateReferences:
         product2 = client.get(f'/api/products/{product2_response.get_json()["id"]}').get_json()
         
         # Product 1 should have 'Other Bean' remaining
-        assert 'Test Bean' not in product1['bean_type']
-        assert 'Other Bean' in product1['bean_type']
+        bean_type_names_1 = [bt['name'] for bt in product1['bean_type']]
+        assert 'Test Bean' not in bean_type_names_1
+        assert 'Other Bean' in bean_type_names_1
         
         # Product 2 should have empty array
         assert product2['bean_type'] == []
@@ -342,9 +343,10 @@ class TestUpdateReferences:
         
         # Verify bean type was replaced
         product = client.get(f'/api/products/{product_response.get_json()["id"]}').get_json()
-        assert 'Bean 1' not in product['bean_type']
-        assert 'Bean 2' in product['bean_type']
-        assert 'Other Bean' in product['bean_type']  # Other bean types preserved
+        bean_type_names = [bt['name'] for bt in product['bean_type']]
+        assert 'Bean 1' not in bean_type_names
+        assert 'Bean 2' in bean_type_names
+        assert 'Other Bean' in bean_type_names  # Other bean types preserved
     
     def test_update_references_nonexistent_item(self, client):
         """Test update references for non-existent items returns 404."""

@@ -121,9 +121,9 @@ def enrich_product_with_lookups(product, factory):
             bt = bean_type_repo.find_by_id(bt_id)
             if bt:
                 bean_types.append(bt)
-        product['bean_type'] = bean_types if bean_types else None
+        product['bean_type'] = bean_types
     else:
-        product['bean_type'] = None
+        product['bean_type'] = []
     
     # Enrich country
     if product.get('country_id'):
@@ -141,9 +141,9 @@ def enrich_product_with_lookups(product, factory):
             region = country_repo.find_by_id(r_id)
             if region:
                 regions.append(region)
-        product['region'] = regions if regions else None
+        product['region'] = regions
     else:
-        product['region'] = None
+        product['region'] = []
     
     # Enrich decaf method
     if product.get('decaf_method_id'):
@@ -192,6 +192,9 @@ def resolve_lookup_field(data, field_name, repository, allow_multiple=False):
         
         # Process names (for new items or when ID is null)
         if names:
+            # Convert single string to list if needed
+            if isinstance(names, str):
+                names = [names]
             for name in names:
                 if name and not any(item['name'] == name for item in resolved_items):
                     item = repository.get_or_create(name)
