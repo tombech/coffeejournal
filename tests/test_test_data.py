@@ -115,9 +115,10 @@ class TestTestDataIntegration:
         # Check specific product details
         yirgacheffe = next((p for p in products if p.get('product_name') == 'Yirgacheffe Single Origin'), None)
         assert yirgacheffe is not None
-        assert yirgacheffe['roaster'] == 'Blue Bottle Coffee'  # Raw data has string
-        assert 'Arabica' in yirgacheffe['bean_type']
-        assert yirgacheffe['country'] == 'Ethiopia'
+        # Modern data structure stores only IDs, not names
+        assert yirgacheffe['roaster_id'] == 1  # Blue Bottle Coffee
+        assert yirgacheffe['bean_type_id'] == [1]  # Arabica
+        assert yirgacheffe['country_id'] == 1  # Ethiopia
         assert yirgacheffe['roast_type'] == 3
     
     def test_batches_loaded(self, test_data_repo_factory):

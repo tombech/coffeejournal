@@ -205,12 +205,17 @@ class ProductRepository(JSONRepositoryBase):
         products = self.find_all()
         filtered = products
         
+        # Note: These filters expect string values but the data stores IDs.
+        # For now, this method is not fully compatible with the ID-based structure.
+        # Filtering should be done at the API level after enrichment.
         if 'roaster' in filters:
+            # Legacy: look for roaster name in deprecated 'roaster' field
             filtered = [p for p in filtered if p.get('roaster') == filters['roaster']]
         if 'bean_type' in filters:
-            # bean_type is now stored as an array
+            # Legacy: look for bean_type name in deprecated 'bean_type' field
             filtered = [p for p in filtered if filters['bean_type'] in p.get('bean_type', [])]
         if 'country' in filters:
+            # Legacy: look for country name in deprecated 'country' field
             filtered = [p for p in filtered if p.get('country') == filters['country']]
         
         return filtered
