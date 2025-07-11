@@ -420,16 +420,16 @@ function ProductDetail() {
       <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#f8f9fa', borderRadius: '8px' }}>
         <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '8px 15px', alignItems: 'start' }}>
           <strong>Roaster:</strong>
-          <span>{product.roaster || '-'}</span>
+          <span>{product.roaster?.name || '-'}</span>
           
           <strong>Bean Type:</strong>
-          <span>{Array.isArray(product.bean_type) ? product.bean_type.join(', ') : (product.bean_type || '-')}</span>
+          <span>{product.bean_type?.map(bt => bt.name).join(', ') || '-'}</span>
           
           <strong>Country:</strong>
-          <span>{product.country || '-'}</span>
+          <span>{product.country?.name || '-'}</span>
           
           <strong>Region:</strong>
-          <span>{Array.isArray(product.region) ? product.region.join(', ') : (product.region || '-')}</span>
+          <span>{product.region?.map(r => r.name).join(', ') || '-'}</span>
           
           <strong>Bean Process:</strong>
           <span>{product.bean_process || '-'}</span>
@@ -444,7 +444,7 @@ function ProductDetail() {
           <span>
             {product.decaf ? (
               <span style={{ color: '#1976d2', fontWeight: 'bold' }}>
-                Yes {product.decaf_method && `(${product.decaf_method})`}
+                Yes {product.decaf_method && `(${product.decaf_method.name})`}
               </span>
             ) : 'No'}
           </span>
@@ -472,7 +472,7 @@ function ProductDetail() {
           <strong>Image:</strong>
           <span>
             {product.image_url ? (
-              <img src={product.image_url} alt={Array.isArray(product.bean_type) ? product.bean_type.join(', ') : (product.bean_type || 'Coffee')} style={{ maxWidth: '200px', borderRadius: '8px' }} />
+              <img src={product.image_url} alt={product.bean_type?.map(bt => bt.name).join(', ') || 'Coffee'} style={{ maxWidth: '200px', borderRadius: '8px' }} />
             ) : '-'}
           </span>
         </div>

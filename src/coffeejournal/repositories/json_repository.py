@@ -143,6 +143,26 @@ class JSONLookupRepository(JSONRepositoryBase, LookupRepository):
         data = {'name': identifier}
         data.update(kwargs)
         return self.create(data)
+    
+    def search(self, query: str) -> List[Dict[str, Any]]:
+        """Search entities by substring match on name and short_form (if available)."""
+        if not query:
+            return []
+        
+        query_lower = query.lower()
+        results = []
+        
+        for entity in self.find_all():
+            # Check name field
+            if entity.get('name') and query_lower in entity['name'].lower():
+                results.append(entity)
+                continue
+            
+            # Check short_form field if it exists
+            if entity.get('short_form') and query_lower in entity['short_form'].lower():
+                results.append(entity)
+        
+        return results
 
 
 class RoasterRepository(JSONLookupRepository):
@@ -188,7 +208,8 @@ class ProductRepository(JSONRepositoryBase):
         if 'roaster' in filters:
             filtered = [p for p in filtered if p.get('roaster') == filters['roaster']]
         if 'bean_type' in filters:
-            filtered = [p for p in filtered if p.get('bean_type') == filters['bean_type']]
+            # bean_type is now stored as an array
+            filtered = [p for p in filtered if filters['bean_type'] in p.get('bean_type', [])]
         if 'country' in filters:
             filtered = [p for p in filtered if p.get('country') == filters['country']]
         

@@ -54,11 +54,11 @@ function ProductList() {
   const groupedProducts = useMemo(() => {
     const groups = {};
     products.forEach(product => {
-      const roaster = product.roaster || 'Unknown Roaster';
-      if (!groups[roaster]) {
-        groups[roaster] = [];
+      const roasterName = product.roaster?.name || 'Unknown Roaster';
+      if (!groups[roasterName]) {
+        groups[roasterName] = [];
       }
-      groups[roaster].push(product);
+      groups[roasterName].push(product);
     });
     return groups;
   }, [products]);
@@ -120,7 +120,7 @@ function ProductList() {
                   {product.image_url && (
                     <img 
                       src={product.image_url} 
-                      alt={Array.isArray(product.bean_type) ? product.bean_type.join(', ') : (product.bean_type || 'Coffee')} 
+                      alt={Array.isArray(product.bean_type) ? product.bean_type.map(bt => bt.name).join(', ') : 'Coffee'} 
                       className="product-image"
                     />
                   )}
@@ -142,7 +142,7 @@ function ProductList() {
                       )}
                     </div>
                     <p style={{ margin: '0 0 6px 0', fontSize: '14px', color: '#666' }}>
-                      <strong>{Array.isArray(product.bean_type) ? product.bean_type.join(', ') : (product.bean_type || 'Unknown')}</strong> • {product.country}{Array.isArray(product.region) ? ` (${product.region.join(', ')})` : (product.region ? ` (${product.region})` : '')}
+                      <strong>{Array.isArray(product.bean_type) ? product.bean_type.map(bt => bt.name).join(', ') : 'Unknown'}</strong> • {product.country?.name || 'Unknown'}{Array.isArray(product.region) && product.region.length > 0 ? ` (${product.region.map(r => r.name).join(', ')})` : ''}
                     </p>
                     {product.rating && (
                       <div style={{ margin: '0 0 8px 0' }}>

@@ -44,3 +44,8 @@ class LookupRepository(BaseRepository):
     def get_or_create(self, name: str) -> Dict[str, Any]:
         """Get existing entity by name or create new one."""
         pass
+    
+    @abstractmethod
+    def search(self, query: str) -> List[Dict[str, Any]]:
+        """Search entities by substring match on name and short_form (if available)."""
+        pass

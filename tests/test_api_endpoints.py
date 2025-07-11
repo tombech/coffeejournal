@@ -11,8 +11,8 @@ class TestProductEndpoints:
     def test_create_product(self, client):
         """Test creating a product via API."""
         product_data = {
-            'roaster': 'Blue Bottle Coffee',
-            'bean_type': 'Arabica',
+            'roaster_name': 'Blue Bottle Coffee',
+            'bean_type_name': ['Arabica'],
             'product_name': 'Test Blend',
             'roast_type': 5,
             'description': 'A test coffee blend'
@@ -22,8 +22,9 @@ class TestProductEndpoints:
         assert response.status_code == 201
         
         product = response.get_json()
-        assert product['roaster'] == 'Blue Bottle Coffee'
-        assert product['bean_type'] == ['Arabica']  # bean_type is now an array
+        assert product['roaster']['name'] == 'Blue Bottle Coffee'
+        assert len(product['bean_type']) == 1
+        assert product['bean_type'][0]['name'] == 'Arabica'
         assert product['product_name'] == 'Test Blend'
         assert product['roast_type'] == 5
         assert product['id'] is not None
@@ -32,11 +33,11 @@ class TestProductEndpoints:
         """Test getting all products."""
         # Create some products first
         client.post('/api/products', json={
-            'roaster': 'Roaster 1',
+            'roaster_name': 'Roaster 1',
             'product_name': 'Product 1'
         })
         client.post('/api/products', json={
-            'roaster': 'Roaster 2',
+            'roaster_name': 'Roaster 2',
             'product_name': 'Product 2'
         })
         
@@ -50,7 +51,7 @@ class TestProductEndpoints:
         """Test getting a specific product."""
         # Create a product
         create_response = client.post('/api/products', json={
-            'roaster': 'Test Roaster',
+            'roaster_name': 'Test Roaster',
             'product_name': 'Test Product'
         })
         product_id = create_response.get_json()['id']
@@ -61,14 +62,14 @@ class TestProductEndpoints:
         
         product = response.get_json()
         assert product['id'] == product_id
-        assert product['roaster'] == 'Test Roaster'
+        assert product['roaster']['name'] == 'Test Roaster'
         assert product['product_name'] == 'Test Product'
     
     def test_update_product(self, client):
         """Test updating a product."""
         # Create initial product
         create_response = client.post('/api/products', json={
-            'roaster': 'Initial Roaster',
+            'roaster_name': 'Initial Roaster',
             'product_name': 'Initial Name',
             'roast_type': 5
         })
@@ -76,7 +77,7 @@ class TestProductEndpoints:
         
         # Update the product
         update_data = {
-            'roaster': 'Initial Roaster',  # Required field
+            'roaster_name': 'Initial Roaster',  # Required field
             'product_name': 'Updated Name',
             'roast_type': 7,
             'description': 'Updated description'
@@ -100,7 +101,7 @@ class TestProductEndpoints:
         """Test deleting a product."""
         # Create a product
         create_response = client.post('/api/products', json={
-            'roaster': 'Test Roaster'
+            'roaster_name': 'Test Roaster'
         })
         product_id = create_response.get_json()['id']
         
@@ -116,29 +117,30 @@ class TestProductEndpoints:
         """Test filtering products."""
         # Create test data
         client.post('/api/products', json={
-            'roaster': 'Roaster A',
-            'bean_type': 'Arabica'
+            'roaster_name': 'Roaster A',
+            'bean_type_name': ['Arabica']
         })
         client.post('/api/products', json={
-            'roaster': 'Roaster B',
-            'bean_type': 'Arabica'
+            'roaster_name': 'Roaster B',
+            'bean_type_name': ['Arabica']
         })
         client.post('/api/products', json={
-            'roaster': 'Roaster A',
-            'bean_type': 'Robusta'
+            'roaster_name': 'Roaster A',
+            'bean_type_name': ['Robusta']
         })
         
         # Test roaster filter
         response = client.get('/api/products?roaster=Roaster A')
         products = response.get_json()
         assert len(products) == 2
-        assert all(p['roaster'] == 'Roaster A' for p in products)
+        assert all(p['roaster']['name'] == 'Roaster A' for p in products)
         
         # Test bean type filter
         response = client.get('/api/products?bean_type=Arabica')
         products = response.get_json()
         assert len(products) == 2
-        assert all(p['bean_type'] == 'Arabica' for p in products)
+        # Bean type is an array of objects
+        assert all(any(bt['name'] == 'Arabica' for bt in p.get('bean_type', [])) for p in products)
 
 
 class TestBatchEndpoints:
@@ -148,7 +150,7 @@ class TestBatchEndpoints:
         """Test creating a batch."""
         # First create a product
         product_response = client.post('/api/products', json={
-            'roaster': 'Test Roaster'
+            'roaster_name': 'Test Roaster'
         })
         product_id = product_response.get_json()['id']
         
@@ -174,7 +176,7 @@ class TestBatchEndpoints:
         """Test getting batches for a specific product."""
         # Create product
         product_response = client.post('/api/products', json={
-            'roaster': 'Test Roaster'
+            'roaster_name': 'Test Roaster'
         })
         product_id = product_response.get_json()['id']
         
@@ -198,7 +200,7 @@ class TestBatchEndpoints:
         """Test updating a batch."""
         # Create product and batch
         product_response = client.post('/api/products', json={
-            'roaster': 'Test Roaster'
+            'roaster_name': 'Test Roaster'
         })
         product_id = product_response.get_json()['id']
         
@@ -229,7 +231,7 @@ class TestBatchEndpoints:
         """Test that deleting a product deletes its batches."""
         # Create product
         product_response = client.post('/api/products', json={
-            'roaster': 'Test Roaster'
+            'roaster_name': 'Test Roaster'
         })
         product_id = product_response.get_json()['id']
         
@@ -254,7 +256,7 @@ class TestBrewSessionEndpoints:
         """Test creating a brew session."""
         # Create product and batch
         product_response = client.post('/api/products', json={
-            'roaster': 'Test Roaster'
+            'roaster_name': 'Test Roaster'
         })
         product_id = product_response.get_json()['id']
         
@@ -287,8 +289,8 @@ class TestBrewSessionEndpoints:
         """Test getting all brew sessions."""
         # Create product and batch
         product_response = client.post('/api/products', json={
-            'roaster': 'Test Roaster',
-            'bean_type': 'Arabica'
+            'roaster_name': 'Test Roaster',
+            'bean_type_name': ['Arabica']
         })
         product_id = product_response.get_json()['id']
         
@@ -312,7 +314,7 @@ class TestBrewSessionEndpoints:
         """Test updating a brew session."""
         # Create product and batch
         product_response = client.post('/api/products', json={
-            'roaster': 'Test Roaster'
+            'roaster_name': 'Test Roaster'
         })
         product_id = product_response.get_json()['id']
         
@@ -348,8 +350,8 @@ class TestBrewSessionEndpoints:
         """Test that brew method and recipe are properly stored and returned."""
         # Create product and batch
         product_response = client.post('/api/products', json={
-            'roaster': 'Test Roaster',
-            'bean_type': 'Arabica'
+            'roaster_name': 'Test Roaster',
+            'bean_type_name': ['Arabica']
         })
         product_id = product_response.get_json()['id']
         
@@ -416,8 +418,8 @@ class TestLookupEndpoints:
     def test_get_roasters(self, client):
         """Test getting roasters."""
         # Create products with roasters
-        client.post('/api/products', json={'roaster': 'Roaster A'})
-        client.post('/api/products', json={'roaster': 'Roaster B'})
+        client.post('/api/products', json={'roaster_name': 'Roaster A'})
+        client.post('/api/products', json={'roaster_name': 'Roaster B'})
         
         response = client.get('/api/roasters')
         assert response.status_code == 200
@@ -431,12 +433,12 @@ class TestLookupEndpoints:
         """Test getting bean types."""
         # Create products with bean types
         client.post('/api/products', json={
-            'roaster': 'Test',
-            'bean_type': 'Arabica'
+            'roaster_name': 'Test',
+            'bean_type_name': ['Arabica']
         })
         client.post('/api/products', json={
-            'roaster': 'Test',
-            'bean_type': 'Robusta'
+            'roaster_name': 'Test',
+            'bean_type_name': ['Robusta']
         })
         
         response = client.get('/api/bean_types')
@@ -450,9 +452,9 @@ class TestLookupEndpoints:
     def test_lookup_deduplication(self, client):
         """Test that lookups are properly deduplicated."""
         # Create multiple products with same roaster
-        client.post('/api/products', json={'roaster': 'Duplicate Roaster'})
-        client.post('/api/products', json={'roaster': 'Duplicate Roaster'})
-        client.post('/api/products', json={'roaster': 'Duplicate Roaster'})
+        client.post('/api/products', json={'roaster_name': 'Duplicate Roaster'})
+        client.post('/api/products', json={'roaster_name': 'Duplicate Roaster'})
+        client.post('/api/products', json={'roaster_name': 'Duplicate Roaster'})
         
         response = client.get('/api/roasters')
         roasters = response.get_json()

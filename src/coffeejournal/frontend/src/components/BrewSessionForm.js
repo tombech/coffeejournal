@@ -77,11 +77,13 @@ function BrewSessionForm({ product_batch_id = null, onSessionSubmitted, initialD
       setIsEditMode(true);
       setFormData({
         ...initialData,
-        brew_method: initialData.brew_method || '',
-        recipe: initialData.recipe || '',
-        filter: initialData.filter || '',
-        kettle: initialData.kettle || '',
-        scale: initialData.scale || '',
+        // Extract names from lookup objects
+        brew_method: initialData.brew_method?.name || '',
+        recipe: initialData.recipe?.name || '',
+        grinder: initialData.grinder?.name || '',
+        filter: initialData.filter?.name || '',
+        kettle: initialData.kettle?.name || '',
+        scale: initialData.scale?.name || '',
         timestamp: initialData.timestamp || new Date().toISOString(),
       });
       // If editing, fetch batches for the selected product

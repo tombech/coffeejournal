@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a Coffee Journal application that allows users to track coffee products, batches, and brewing sessions. The application consists of a Flask backend API and React frontend.
+This is a Coffee Journal application that allows users to track coffee products, batches, and brewing sessions. The application consists of a Flask backend API and React frontend with comprehensive lookup management for brewing equipment and methods.
 
 ## Architecture
 
@@ -16,26 +16,32 @@ This is a Coffee Journal application that allows users to track coffee products,
   - `json_repository.py` - JSON file-based repository implementations
   - `factory.py` - Repository factory for managing instances
 - **API Routes**: `src/coffeejournal/main.py` - REST API endpoints with Blueprint pattern
-- **Data Storage**: JSON files in `instance/data/` directory
+- **Data Storage**: JSON files in `test_data/` directory by default
 
 ### Frontend (React)
 - **Entry Point**: `src/coffeejournal/frontend/src/App.js` - Main React app with routing
 - **Components**: `src/coffeejournal/frontend/src/components/` - React components for forms, lists, and details
-- **Build System**: Create React App (CRA) with standard scripts
+- **Lookup Management**: `src/coffeejournal/frontend/src/components/lookup/` - Settings management for lookup tables
+- **Build System**: Create React App (CRA) with standard scripts and proxy to backend
 
 ### Data Model Structure
-- **CoffeeBeanProduct**: Core product entity linked to roasters, bean types, countries/regions
-- **CoffeeBatch**: Specific batches of coffee with roast dates and amounts
-- **BrewSession**: Individual brewing sessions with parameters and ratings
-- **Lookup Tables**: Roaster, BeanType, Country, BrewMethod, Recipe (auto-created via `get_or_create` helper)
+- **CoffeeBeanProduct**: Core product entity with roasters, bean types, countries/regions, and decaf methods
+- **CoffeeBatch**: Specific batches of coffee with roast dates, amounts, and pricing
+- **BrewSession**: Individual brewing sessions with detailed parameters, equipment, and comprehensive rating system
+- **Lookup Tables**: Roaster, BeanType, Country, BrewMethod, Recipe, DecafMethod, Grinder, Filter, Kettle, Scale (auto-created via `get_or_create` helper)
 
 ### JSON Storage Structure
 Each entity type is stored in separate JSON files:
 - `test_data/roasters.json` - Roaster lookup table
-- `test_data/bean_types.json` - Bean type lookup table
+- `test_data/bean_types.json` - Bean type lookup table  
 - `test_data/countries.json` - Country/region lookup table
 - `test_data/brew_methods.json` - Brew method lookup table
 - `test_data/recipes.json` - Recipe lookup table
+- `test_data/decaf_methods.json` - Decaffeination method lookup table
+- `test_data/grinders.json` - Coffee grinder lookup table
+- `test_data/filters.json` - Filter type lookup table
+- `test_data/kettles.json` - Kettle lookup table
+- `test_data/scales.json` - Scale lookup table
 - `test_data/products.json` - Coffee products
 - `test_data/batches.json` - Coffee batches
 - `test_data/brew_sessions.json` - Brewing sessions
@@ -86,10 +92,12 @@ npm test
 
 The Flask backend uses Blueprint patterns with all API routes prefixed with `/api`. Key endpoints:
 
-- **Products**: `/api/products` - CRUD operations for coffee products
-- **Batches**: `/api/batches` and `/api/products/{id}/batches` - Batch management
-- **Brew Sessions**: `/api/brew_sessions` - Brewing session tracking
-- **Lookups**: `/api/roasters`, `/api/bean_types`, `/api/countries`, `/api/brew_methods`, `/api/recipes`
+- **Products**: `/api/products` - CRUD operations for coffee products with lookup integration
+- **Batches**: `/api/batches` and `/api/products/{id}/batches` - Batch management with price per cup calculations
+- **Brew Sessions**: `/api/brew_sessions` and `/api/batches/{id}/brew_sessions` - Comprehensive brewing session tracking
+- **Core Lookups**: `/api/roasters`, `/api/bean_types`, `/api/countries`, `/api/brew_methods`, `/api/recipes`
+- **Equipment Lookups**: `/api/grinders`, `/api/filters`, `/api/kettles`, `/api/scales`, `/api/decaf_methods`
+- **Usage Tracking**: Each lookup endpoint includes `/usage` and `/update_references` sub-endpoints for safe deletion and data integrity
 
 ## Data Storage
 
@@ -105,19 +113,33 @@ This design allows easy migration to databases later while providing flexibility
 ## Frontend Structure
 
 React app using React Router for navigation. Components are organized by functionality:
-- **ProductList/ProductDetail/ProductForm**: Product management
-- **BrewSessionList/BrewSessionForm/BrewSessionCard**: Brewing session management
-- Uses standard CRA structure with testing setup
+- **Core Components**: ProductList/ProductDetail/ProductForm, BrewSessionList/BrewSessionForm/BrewSessionCard
+- **Batch Management**: BatchForm for individual coffee batches 
+- **Settings Management**: Comprehensive Settings page with navigation to lookup managers
+- **Lookup Managers**: Individual managers for each lookup type (roasters, bean types, countries, brew methods, recipes, grinders, filters, kettles, scales, decaf methods)
+- **UI Components**: Toast notifications, StarRating, DateInput/DateTimeInput, MultiSelect, DeleteConfirmationModal
+- **Navigation**: Home page and Settings page with organized lookup management
+- Uses standard CRA structure with React Router and proxy configuration for backend API
 
 ## Key Development Notes
 
 - Backend uses Flask-CORS for cross-origin requests from React dev server
-- Frontend expects backend API at different port (Flask default: 5000, React: 3000)
+- Frontend proxy configuration in package.json directs API calls to backend (Flask: 5000, React: 3000)
 - Repository pattern abstracts storage implementation from business logic
 - Calculated properties (`brew_ratio`, `price_per_cup`) are computed in API routes
 - All datetime fields use ISO format for API communication
 - JSON storage is thread-safe with file locking for concurrent access
+- Comprehensive lookup system with usage tracking and safe deletion
+- Equipment tracking includes grinders, filters, kettles, and scales for detailed brew session records
+- Settings page provides centralized management for all lookup tables
 - Easy to switch storage backends by implementing new repository classes
+
+## Commit Guidelines
+
+- Never include self promotion in commit messages!!
+- Always keep commit messages short and to the point
+- Do not enumerate number of tests added
+- For small changes always use single line commit messages
 
 ## Testing
 
@@ -133,23 +155,32 @@ uv run pytest tests/test_api_endpoints.py -v
 Tests include:
 - Repository pattern unit tests
 - API endpoint integration tests
+- Lookup usage and reference management tests
+- Brew session lookup integration tests
 - Error handling and validation tests
 - Calculated property tests
 - Test data integration tests
 
 ## Test Data
 
-The application includes sample test data with:
-- 5 roasters (Blue Bottle, Intelligentsia, Stumptown, Counter Culture, La Colombe)
-- 4 bean types (Arabica, Robusta, Liberica, Excelsa)
-- 10 countries/regions
-- 8 brew methods (V60, Chemex, French Press, etc.)
-- 5 recipes
-- 5 coffee products with realistic details
-- 6 batches with purchase and roast dates
-- 6 brew sessions with tasting notes
+The application includes comprehensive sample test data with:
+- **Roasters**: Blue Bottle, Intelligentsia, Stumptown, Counter Culture, La Colombe
+- **Bean Types**: Arabica, Robusta, Liberica, Excelsa
+- **Countries/Regions**: 10+ coffee-producing regions
+- **Brew Methods**: V60, Chemex, French Press, AeroPress, Espresso, etc.
+- **Equipment**: Grinders (3 types), Kettles, Scales (3 types), Filters
+- **Decaf Methods**: Swiss water method and other decaffeination processes
+- **Recipes**: 5 different brewing recipes
+- **Products**: 5 coffee products with realistic details including decaf options
+- **Batches**: 6 batches with purchase dates, roast dates, and pricing
+- **Brew Sessions**: 6 detailed brewing sessions with comprehensive rating system and equipment tracking
 
 To regenerate test data:
 ```bash
-python3 create_test_data.py
+uv run python3 create_test_data.py
+```
+
+## Docker Support
+
+The project includes Docker configuration in the `docker/` directory for containerized deployment with separate backend and frontend containers, nginx reverse proxy, and volume mounting for data persistence.
 ```

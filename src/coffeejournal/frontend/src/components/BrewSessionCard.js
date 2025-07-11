@@ -47,9 +47,9 @@ function BrewSessionCard({ session, onDelete, onDuplicate }) {
   return (
     <div className="card">
       <h3>Brew Session - {new Date(session.timestamp).toLocaleString('nb-NO')}</h3>
-      <p><strong>Product:</strong> {session.product_details?.roaster || 'Unknown'} - {Array.isArray(session.product_details?.bean_type) ? session.product_details.bean_type.join(', ') : (session.product_details?.bean_type || 'Unknown')} (Roast: {formatDateNorwegian(session.product_details?.roast_date)})</p>
-      <p><strong>Method:</strong> {session.brew_method || 'N/A'} - <strong>Recipe:</strong> {session.recipe || 'N/A'}</p>
-      <p><strong>Equipment:</strong> Filter: {session.filter || 'N/A'}, Kettle: {session.kettle || 'N/A'}, Scale: {session.scale || 'N/A'}</p>
+      <p><strong>Product:</strong> {session.product_details?.roaster?.name || 'Unknown'} - {Array.isArray(session.product_details?.bean_type) ? session.product_details.bean_type.map(bt => bt.name).join(', ') : 'Unknown'} (Roast: {formatDateNorwegian(session.product_details?.roast_date)})</p>
+      <p><strong>Method:</strong> {session.brew_method?.name || 'N/A'} - <strong>Recipe:</strong> {session.recipe?.name || 'N/A'}</p>
+      <p><strong>Equipment:</strong> Filter: {session.filter?.name || 'N/A'}, Kettle: {session.kettle?.name || 'N/A'}, Scale: {session.scale?.name || 'N/A'}</p>
       <p>
         <strong>Coffee:</strong> {session.amount_coffee_grams || 'N/A'}g,
         <strong> Water:</strong> {session.amount_water_grams || 'N/A'}g,

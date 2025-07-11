@@ -123,5 +123,83 @@
     "bean_process": null,
     "notes": null,
     "id": 6
+  },
+  {
+    "roaster": "Blue Bottle Coffee",
+    "roaster_id": 1,
+    "bean_type": [
+      "Arabica"
+    ],
+    "bean_type_id": [
+      1
+    ],
+    "country": null,
+    "country_id": null,
+    "region": [],
+    "region_id": [],
+    "product_name": "Test Product API",
+    "roast_type": null,
+    "description": null,
+    "url": null,
+    "image_url": null,
+    "decaf": false,
+    "decaf_method": null,
+    "decaf_method_id": null,
+    "rating": null,
+    "bean_process": null,
+    "notes": null,
+    "id": 7
+  },
+  {
+    "roaster": "New Test Roaster",
+    "roaster_id": 8,
+    "bean_type": [
+      "New Bean Type"
+    ],
+    "bean_type_id": [
+      5
+    ],
+    "country": null,
+    "country_id": null,
+    "region": [],
+    "region_id": [],
+    "product_name": "Test Product with New Lookups",
+    "roast_type": null,
+    "description": null,
+    "url": null,
+    "image_url": null,
+    "decaf": false,
+    "decaf_method": null,
+    "decaf_method_id": null,
+    "rating": null,
+    "bean_process": null,
+    "notes": null,
+    "id": 8
+  },
+  {
+    "roaster": "Test Roaster",
+    "roaster_id": 7,
+    "bean_type": [
+      "Arabica"
+    ],
+    "bean_type_id": [
+      1
+    ],
+    "country": null,
+    "country_id": null,
+    "region": [],
+    "region_id": [],
+    "product_name": "Test Product",
+    "roast_type": null,
+    "description": null,
+    "url": null,
+    "image_url": null,
+    "decaf": false,
+    "decaf_method": null,
+    "decaf_method_id": null,
+    "rating": null,
+    "bean_process": null,
+    "notes": null,
+    "id": 9
   }
 ]

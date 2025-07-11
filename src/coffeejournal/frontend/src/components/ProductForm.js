@@ -3,16 +3,17 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useToast } from './Toast';
 import { API_BASE_URL } from '../config';
 import StarRating from './StarRating';
-import MultiSelect from './MultiSelect';
+import HeadlessAutocomplete from './HeadlessAutocomplete';
+import HeadlessMultiAutocomplete from './HeadlessMultiAutocomplete';
 
 function ProductForm() {
   const { id } = useParams(); // Get ID from URL for edit mode
   const navigate = useNavigate();
   const { addToast } = useToast();
   const [formData, setFormData] = useState({
-    roaster: '',
+    roaster: { id: null, name: '', isNew: false },
     bean_type: [],
-    country: '',
+    country: { id: null, name: '', isNew: false },
     region: [],
     product_name: '',
     roast_type: '',
@@ -20,7 +21,7 @@ function ProductForm() {
     url: '',
     image_url: '',
     decaf: false,
-    decaf_method: '',
+    decaf_method: { id: null, name: '', isNew: false },
     rating: '',
     bean_process: '',
     notes: ''
@@ -29,35 +30,7 @@ function ProductForm() {
   const [error, setError] = useState(null);
   const [isEditMode, setIsEditMode] = useState(false);
 
-  // State for dynamic dropdown options
-  const [roasters, setRoasters] = useState([]);
-  const [beanTypes, setBeanTypes] = useState([]);
-  const [countries, setCountries] = useState([]);
-  const [decafMethods, setDecafMethods] = useState([]);
-
   useEffect(() => {
-    // Fetch all lookup data when component mounts
-    const fetchLookupData = async () => {
-      try {
-        const [roastersRes, beanTypesRes, countriesRes, decafMethodsRes] = await Promise.all([
-          fetch(`${API_BASE_URL}/roasters`),
-          fetch(`${API_BASE_URL}/bean_types`),
-          fetch(`${API_BASE_URL}/countries`),
-          fetch(`${API_BASE_URL}/decaf_methods`),
-        ]);
-
-        setRoasters(await roastersRes.json());
-        setBeanTypes(await beanTypesRes.json());
-        setCountries(await countriesRes.json());
-        setDecafMethods(await decafMethodsRes.json());
-      } catch (err) {
-        console.error("Error fetching lookup data:", err);
-        setError("Failed to load lookup data.");
-      }
-    };
-
-    fetchLookupData();
-
     // If ID exists, fetch product data for editing
     if (id) {
       setIsEditMode(true);
@@ -75,19 +48,19 @@ function ProductForm() {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       const data = await response.json();
-      // Convert single values to arrays for multi-select fields and ensure all fields have values
+      // Convert lookup objects to the expected format
       setFormData({
-        roaster: data.roaster || '',
-        bean_type: Array.isArray(data.bean_type) ? data.bean_type : (data.bean_type ? [data.bean_type] : []),
-        country: data.country || '',
-        region: Array.isArray(data.region) ? data.region : (data.region ? [data.region] : []),
+        roaster: data.roaster ? { id: data.roaster.id, name: data.roaster.name, isNew: false } : { id: null, name: '', isNew: false },
+        bean_type: data.bean_type?.map(bt => ({ id: bt.id, name: bt.name, isNew: false })) || [],
+        country: data.country ? { id: data.country.id, name: data.country.name, isNew: false } : { id: null, name: '', isNew: false },
+        region: data.region?.map(r => ({ id: r.id, name: r.name, isNew: false })) || [],
         product_name: data.product_name || '',
         roast_type: data.roast_type || '',
         description: data.description || '',
         url: data.url || '',
         image_url: data.image_url || '',
         decaf: data.decaf || false,
-        decaf_method: data.decaf_method || '',
+        decaf_method: data.decaf_method ? { id: data.decaf_method.id, name: data.decaf_method.name, isNew: false } : { id: null, name: '', isNew: false },
         rating: data.rating || '',
         bean_process: data.bean_process || '',
         notes: data.notes || ''
@@ -112,27 +85,6 @@ function ProductForm() {
     setFormData((prev) => ({ ...prev, rating: rating }));
   };
 
-  const handleMultiSelectChange = (name, values) => {
-    setFormData((prev) => ({ ...prev, [name]: values }));
-  };
-
-  // Handle mobile datalist issues
-  const handleMobileDatalistFocus = (e) => {
-    // On mobile, temporarily remove the list attribute to prevent sticky dropdown
-    if (/Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
-      e.target.removeAttribute('list');
-    }
-  };
-
-  const handleMobileDatalistBlur = (e) => {
-    // Restore the list attribute after blur
-    if (/Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
-      const listId = e.target.getAttribute('data-list');
-      if (listId) {
-        e.target.setAttribute('list', listId);
-      }
-    }
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -142,13 +94,47 @@ function ProductForm() {
     const method = isEditMode ? 'PUT' : 'POST';
     const url = isEditMode ? `${API_BASE_URL}/products/${id}` : `${API_BASE_URL}/products`;
 
+    // Transform form data for submission
+    const submitData = {
+      // Handle roaster
+      roaster_id: formData.roaster.id,
+      roaster_name: formData.roaster.name,
+      
+      // Handle bean types (multiple)
+      bean_type_id: formData.bean_type.map(bt => bt.id).filter(id => id !== null),
+      bean_type_name: formData.bean_type.map(bt => bt.name).filter(name => name),
+      
+      // Handle country
+      country_id: formData.country.id,
+      country_name: formData.country.name,
+      
+      // Handle regions (multiple)
+      region_id: formData.region.map(r => r.id).filter(id => id !== null),
+      region_name: formData.region.map(r => r.name).filter(name => name),
+      
+      // Handle decaf method
+      decaf_method_id: formData.decaf_method.id,
+      decaf_method_name: formData.decaf_method.name,
+      
+      // Include all other fields as-is
+      product_name: formData.product_name,
+      roast_type: formData.roast_type,
+      description: formData.description,
+      url: formData.url,
+      image_url: formData.image_url,
+      decaf: formData.decaf,
+      rating: formData.rating,
+      bean_process: formData.bean_process,
+      notes: formData.notes
+    };
+
     try {
       const response = await fetch(url, {
         method: method,
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(submitData),
       });
 
       if (!response.ok) {
@@ -181,60 +167,40 @@ function ProductForm() {
       <h2>{isEditMode ? 'Edit Coffee Product' : 'Add New Coffee Product'}</h2>
       <form onSubmit={handleSubmit}>
         <label>
-          Roaster:
-          <input
-            type="text"
-            name="roaster"
+          Roaster *:
+          <HeadlessAutocomplete
+            lookupType="roasters"
             value={formData.roaster}
-            onChange={handleChange}
-            list="roastersOptions"
-            data-list="roastersOptions"
-            onFocus={handleMobileDatalistFocus}
-            onBlur={handleMobileDatalistBlur}
+            onChange={(value) => setFormData(prev => ({ ...prev, roaster: value }))}
+            placeholder="Start typing to search roasters..."
             required
           />
-          <datalist id="roastersOptions">
-            {roasters.map((r) => (
-              <option key={r.id} value={r.name} />
-            ))}
-          </datalist>
         </label>
         <label>
           Bean Type:
-          <MultiSelect
-            name="bean_type"
-            values={formData.bean_type}
-            onChange={handleMultiSelectChange}
-            options={beanTypes}
-            placeholder="Add bean types..."
+          <HeadlessMultiAutocomplete
+            lookupType="bean_types"
+            value={formData.bean_type}
+            onChange={(value) => setFormData(prev => ({ ...prev, bean_type: value }))}
+            placeholder="Start typing to search bean types..."
           />
         </label>
         <label>
           Country:
-          <input
-            type="text"
-            name="country"
+          <HeadlessAutocomplete
+            lookupType="countries"
             value={formData.country}
-            onChange={handleChange}
-            list="countriesOptions"
-            data-list="countriesOptions"
-            onFocus={handleMobileDatalistFocus}
-            onBlur={handleMobileDatalistBlur}
+            onChange={(value) => setFormData(prev => ({ ...prev, country: value }))}
+            placeholder="Start typing to search countries..."
           />
-          <datalist id="countriesOptions">
-            {countries.map((c) => (
-              <option key={c.id} value={c.name} />
-            ))}
-          </datalist>
         </label>
         <label>
-          Region: (if different from country or more specific)
-          <MultiSelect
-            name="region"
-            values={formData.region}
-            onChange={handleMultiSelectChange}
-            options={countries}
-            placeholder="Add regions..."
+          Region:
+          <HeadlessMultiAutocomplete
+            lookupType="countries"
+            value={formData.region}
+            onChange={(value) => setFormData(prev => ({ ...prev, region: value }))}
+            placeholder="Start typing to search regions..."
           />
         </label>
         <label>
@@ -295,21 +261,12 @@ function ProductForm() {
         {formData.decaf && (
           <label>
             Decaf Method:
-            <input
-              type="text"
-              name="decaf_method"
+            <HeadlessAutocomplete
+              lookupType="decaf_methods"
               value={formData.decaf_method}
-              onChange={handleChange}
-              list="decafMethodsOptions"
-              data-list="decafMethodsOptions"
-              onFocus={handleMobileDatalistFocus}
-              onBlur={handleMobileDatalistBlur}
+              onChange={(value) => setFormData(prev => ({ ...prev, decaf_method: value }))}
+              placeholder="Start typing to search decaf methods..."
             />
-            <datalist id="decafMethodsOptions">
-              {decafMethods.map((dm) => (
-                <option key={dm.id} value={dm.name} />
-              ))}
-            </datalist>
           </label>
         )}
         

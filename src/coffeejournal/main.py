@@ -31,6 +31,146 @@ def calculate_brew_ratio(coffee_grams, water_grams):
     return None
 
 
+def enrich_product_with_lookups(product, factory):
+    """Enrich product with lookup objects instead of just names."""
+    if not product:
+        return product
+    
+    # Get repositories
+    roaster_repo = factory.get_roaster_repository()
+    bean_type_repo = factory.get_bean_type_repository()
+    country_repo = factory.get_country_repository()
+    decaf_method_repo = factory.get_decaf_method_repository()
+    
+    # Enrich roaster
+    if product.get('roaster_id'):
+        roaster = roaster_repo.find_by_id(product['roaster_id'])
+        product['roaster'] = roaster if roaster else None
+    else:
+        product['roaster'] = None
+    
+    # Enrich bean types (multiple)
+    if product.get('bean_type_id'):
+        bean_type_ids = product['bean_type_id'] if isinstance(product['bean_type_id'], list) else [product['bean_type_id']]
+        bean_types = []
+        for bt_id in bean_type_ids:
+            bt = bean_type_repo.find_by_id(bt_id)
+            if bt:
+                bean_types.append(bt)
+        product['bean_type'] = bean_types if bean_types else None
+    else:
+        product['bean_type'] = None
+    
+    # Enrich country
+    if product.get('country_id'):
+        country = country_repo.find_by_id(product['country_id'])
+        product['country'] = country if country else None
+    else:
+        product['country'] = None
+    
+    # Enrich regions (multiple)
+    if product.get('region_id'):
+        region_ids = product['region_id'] if isinstance(product['region_id'], list) else [product['region_id']]
+        regions = []
+        for r_id in region_ids:
+            # Regions are stored in the countries table
+            region = country_repo.find_by_id(r_id)
+            if region:
+                regions.append(region)
+        product['region'] = regions if regions else None
+    else:
+        product['region'] = None
+    
+    # Enrich decaf method
+    if product.get('decaf_method_id'):
+        decaf_method = decaf_method_repo.find_by_id(product['decaf_method_id'])
+        product['decaf_method'] = decaf_method if decaf_method else None
+    else:
+        product['decaf_method'] = None
+    
+    return product
+
+
+def resolve_lookup_field(data, field_name, repository, allow_multiple=False):
+    """
+    Resolve lookup field from either ID or name submission.
+    
+    Args:
+        data: Request data containing lookup info
+        field_name: Base field name (e.g., 'roaster', 'bean_type')
+        repository: Repository to use for lookup operations
+        allow_multiple: If True, handle arrays of lookups
+    
+    Returns:
+        dict: Contains resolved 'name', 'id', and optionally 'names'/'ids' for multiple
+    """
+    id_field = f"{field_name}_id"
+    name_field = f"{field_name}_name" if f"{field_name}_name" in data else field_name
+    
+    if allow_multiple:
+        # Handle multiple values (like bean_type)
+        ids = data.get(id_field, [])
+        names = data.get(name_field, [])
+        
+        resolved_items = []
+        resolved_ids = []
+        resolved_names = []
+        
+        # Process IDs first
+        if ids:
+            for lookup_id in ids:
+                if lookup_id:  # Skip null/empty IDs
+                    item = repository.find_by_id(lookup_id)
+                    if item:
+                        resolved_items.append(item)
+                        resolved_ids.append(item['id'])
+                        resolved_names.append(item['name'])
+        
+        # Process names (for new items or when ID is null)
+        if names:
+            for name in names:
+                if name and not any(item['name'] == name for item in resolved_items):
+                    item = repository.get_or_create(name)
+                    resolved_items.append(item)
+                    resolved_ids.append(item['id'])
+                    resolved_names.append(item['name'])
+        
+        return {
+            'items': resolved_items,
+            'ids': resolved_ids,
+            'names': resolved_names
+        }
+    else:
+        # Handle single value
+        lookup_id = data.get(id_field)
+        lookup_name = data.get(name_field)
+        
+        if lookup_id:
+            # Use existing item by ID
+            item = repository.find_by_id(lookup_id)
+            if item:
+                return {
+                    'item': item,
+                    'id': item['id'],
+                    'name': item['name']
+                }
+        
+        if lookup_name:
+            # Create or get item by name
+            item = repository.get_or_create(lookup_name)
+            return {
+                'item': item,
+                'id': item['id'],
+                'name': item['name']
+            }
+        
+        return {
+            'item': None,
+            'id': None,
+            'name': None
+        }
+
+
 def calculate_price_per_cup(price, amount_grams):
     """Calculate price per cup based on 18g coffee per cup."""
     if price is not None and amount_grams is not None:
@@ -137,6 +277,17 @@ def get_roasters():
     factory = get_repository_factory()
     roasters = factory.get_roaster_repository().find_all()
     return jsonify(roasters)
+
+@api.route('/roasters/search', methods=['GET'])
+def search_roasters():
+    """Search roasters by name."""
+    query = request.args.get('q', '').strip()
+    if not query:
+        return jsonify([])
+    
+    factory = get_repository_factory()
+    results = factory.get_roaster_repository().search(query)
+    return jsonify(results)
 
 @api.route('/roasters/<int:roaster_id>', methods=['GET'])
 def get_roaster(roaster_id):
@@ -253,6 +404,17 @@ def get_bean_types():
     factory = get_repository_factory()
     bean_types = factory.get_bean_type_repository().find_all()
     return jsonify(bean_types)
+
+@api.route('/bean_types/search', methods=['GET'])
+def search_bean_types():
+    """Search bean types by name."""
+    query = request.args.get('q', '').strip()
+    if not query:
+        return jsonify([])
+    
+    factory = get_repository_factory()
+    results = factory.get_bean_type_repository().search(query)
+    return jsonify(results)
 
 @api.route('/bean_types/<int:bean_type_id>', methods=['GET'])
 def get_bean_type(bean_type_id):
@@ -396,6 +558,17 @@ def get_countries():
     countries = factory.get_country_repository().find_all()
     return jsonify(countries)
 
+@api.route('/countries/search', methods=['GET'])
+def search_countries():
+    """Search countries by name."""
+    query = request.args.get('q', '').strip()
+    if not query:
+        return jsonify([])
+    
+    factory = get_repository_factory()
+    results = factory.get_country_repository().search(query)
+    return jsonify(results)
+
 @api.route('/countries/<int:country_id>', methods=['GET'])
 def get_country(country_id):
     """Get a specific country."""
@@ -535,6 +708,17 @@ def get_brew_methods():
     brew_methods = factory.get_brew_method_repository().find_all()
     return jsonify(brew_methods)
 
+@api.route('/brew_methods/search', methods=['GET'])
+def search_brew_methods():
+    """Search brew methods by name or short_form."""
+    query = request.args.get('q', '').strip()
+    if not query:
+        return jsonify([])
+    
+    factory = get_repository_factory()
+    results = factory.get_brew_method_repository().search(query)
+    return jsonify(results)
+
 @api.route('/brew_methods/<int:brew_method_id>', methods=['GET'])
 def get_brew_method(brew_method_id):
     """Get a specific brew method."""
@@ -646,6 +830,17 @@ def get_recipes():
     recipes = factory.get_recipe_repository().find_all()
     return jsonify(recipes)
 
+@api.route('/recipes/search', methods=['GET'])
+def search_recipes():
+    """Search recipes by name."""
+    query = request.args.get('q', '').strip()
+    if not query:
+        return jsonify([])
+    
+    factory = get_repository_factory()
+    results = factory.get_recipe_repository().search(query)
+    return jsonify(results)
+
 @api.route('/recipes/<int:recipe_id>', methods=['GET'])
 def get_recipe(recipe_id):
     """Get a specific recipe."""
@@ -756,6 +951,17 @@ def get_decaf_methods():
     factory = get_repository_factory()
     decaf_methods = factory.get_decaf_method_repository().find_all()
     return jsonify(decaf_methods)
+
+@api.route('/decaf_methods/search', methods=['GET'])
+def search_decaf_methods():
+    """Search decaf methods by name."""
+    query = request.args.get('q', '').strip()
+    if not query:
+        return jsonify([])
+    
+    factory = get_repository_factory()
+    results = factory.get_decaf_method_repository().search(query)
+    return jsonify(results)
 
 @api.route('/decaf_methods/<int:decaf_method_id>', methods=['GET'])
 def get_decaf_method(decaf_method_id):
@@ -870,6 +1076,17 @@ def get_grinders():
     grinders = factory.get_grinder_repository().find_all()
     return jsonify(grinders)
 
+@api.route('/grinders/search', methods=['GET'])
+def search_grinders():
+    """Search grinders by name or short_form."""
+    query = request.args.get('q', '').strip()
+    if not query:
+        return jsonify([])
+    
+    factory = get_repository_factory()
+    results = factory.get_grinder_repository().search(query)
+    return jsonify(results)
+
 @api.route('/grinders/<int:grinder_id>', methods=['GET'])
 def get_grinder(grinder_id):
     """Get a specific grinder."""
@@ -980,6 +1197,17 @@ def get_filters():
     factory = get_repository_factory()
     filters = factory.get_filter_repository().find_all()
     return jsonify(filters)
+
+@api.route('/filters/search', methods=['GET'])
+def search_filters():
+    """Search filters by name."""
+    query = request.args.get('q', '').strip()
+    if not query:
+        return jsonify([])
+    
+    factory = get_repository_factory()
+    results = factory.get_filter_repository().search(query)
+    return jsonify(results)
 
 @api.route('/filters/<int:filter_id>', methods=['GET'])
 def get_filter(filter_id):
@@ -1092,6 +1320,17 @@ def get_kettles():
     kettles = factory.get_kettle_repository().find_all()
     return jsonify(kettles)
 
+@api.route('/kettles/search', methods=['GET'])
+def search_kettles():
+    """Search kettles by name."""
+    query = request.args.get('q', '').strip()
+    if not query:
+        return jsonify([])
+    
+    factory = get_repository_factory()
+    results = factory.get_kettle_repository().search(query)
+    return jsonify(results)
+
 @api.route('/kettles/<int:kettle_id>', methods=['GET'])
 def get_kettle(kettle_id):
     """Get a specific kettle."""
@@ -1202,6 +1441,17 @@ def get_scales():
     factory = get_repository_factory()
     scales = factory.get_scale_repository().find_all()
     return jsonify(scales)
+
+@api.route('/scales/search', methods=['GET'])
+def search_scales():
+    """Search scales by name."""
+    query = request.args.get('q', '').strip()
+    if not query:
+        return jsonify([])
+    
+    factory = get_repository_factory()
+    results = factory.get_scale_repository().search(query)
+    return jsonify(results)
 
 @api.route('/scales/<int:scale_id>', methods=['GET'])
 def get_scale(scale_id):
@@ -1328,7 +1578,13 @@ def get_products():
     else:
         products = product_repo.find_all()
     
-    return jsonify(products)
+    # Enrich all products with lookup objects
+    enriched_products = []
+    for product in products:
+        enriched_product = enrich_product_with_lookups(product.copy(), factory)
+        enriched_products.append(enriched_product)
+    
+    return jsonify(enriched_products)
 
 
 @api.route('/products/<int:product_id>', methods=['GET'])
@@ -1340,7 +1596,10 @@ def get_product(product_id):
     if not product:
         return jsonify({'error': 'Product not found'}), 404
     
-    return jsonify(product)
+    # Enrich product with lookup objects
+    enriched_product = enrich_product_with_lookups(product.copy(), factory)
+    
+    return jsonify(enriched_product)
 
 
 @api.route('/products', methods=['POST'])
@@ -1349,75 +1608,50 @@ def create_product():
     factory = get_repository_factory()
     data = request.json
     
-    # Get or create related entities
-    roaster_repo = factory.get_roaster_repository()
-    bean_type_repo = factory.get_bean_type_repository()
-    country_repo = factory.get_country_repository()
-    
-    # Handle roaster (required)
-    if not data.get('roaster'):
+    # Validate required fields
+    if not data.get('roaster') and not data.get('roaster_id') and not data.get('roaster_name'):
         return jsonify({'error': 'Roaster is required'}), 400
     
-    roaster = roaster_repo.get_or_create(data['roaster'])
+    # Resolve lookup fields using new helper
+    roaster_result = resolve_lookup_field(data, 'roaster', factory.get_roaster_repository())
+    if not roaster_result['item']:
+        return jsonify({'error': 'Invalid roaster'}), 400
     
-    # Handle optional fields
-    # Bean types (now an array)
-    bean_types = []
-    bean_type_ids = []
-    if data.get('bean_type'):
-        bean_type_list = data['bean_type'] if isinstance(data['bean_type'], list) else [data['bean_type']]
-        for bt_name in bean_type_list:
-            if bt_name:
-                bt = bean_type_repo.get_or_create(bt_name)
-                bean_types.append(bt['name'])
-                bean_type_ids.append(bt['id'])
+    bean_type_result = resolve_lookup_field(data, 'bean_type', factory.get_bean_type_repository(), allow_multiple=True)
+    country_result = resolve_lookup_field(data, 'country', factory.get_country_repository())
+    region_result = resolve_lookup_field(data, 'region', factory.get_country_repository(), allow_multiple=True)
     
-    country = None
-    if data.get('country'):
-        country = country_repo.get_or_create(data['country'])
+    # Handle decaf method
+    decaf_method_result = {'item': None, 'id': None, 'name': None}
+    if data.get('decaf') and (data.get('decaf_method') or data.get('decaf_method_id')):
+        decaf_method_result = resolve_lookup_field(data, 'decaf_method', factory.get_decaf_method_repository())
     
-    # Regions (now an array)
-    regions = []
-    region_ids = []
-    if data.get('region'):
-        region_list = data['region'] if isinstance(data['region'], list) else [data['region']]
-        for r_name in region_list:
-            if r_name:
-                r = country_repo.get_or_create(r_name)
-                regions.append(r['name'])
-                region_ids.append(r['id'])
-    
-    # Handle decaf method if product is decaf
-    decaf_method = None
-    if data.get('decaf') and data.get('decaf_method'):
-        decaf_method_repo = factory.get_decaf_method_repository()
-        decaf_method = decaf_method_repo.get_or_create(data['decaf_method'])
-    
-    # Create product
+    # Create product data
     product_data = {
-        'roaster': roaster['name'],
-        'roaster_id': roaster['id'],
-        'bean_type': bean_types,
-        'bean_type_id': bean_type_ids,
-        'country': country['name'] if country else None,
-        'country_id': country['id'] if country else None,
-        'region': regions,
-        'region_id': region_ids,
+        'roaster': roaster_result['name'],
+        'roaster_id': roaster_result['id'],
+        'bean_type': bean_type_result['names'],
+        'bean_type_id': bean_type_result['ids'],
+        'country': country_result['name'],
+        'country_id': country_result['id'],
+        'region': region_result['names'],
+        'region_id': region_result['ids'],
         'product_name': data.get('product_name'),
         'roast_type': safe_int(data.get('roast_type')),
         'description': data.get('description'),
         'url': data.get('url'),
         'image_url': data.get('image_url'),
         'decaf': data.get('decaf', False),
-        'decaf_method': decaf_method['name'] if decaf_method else None,
-        'decaf_method_id': decaf_method['id'] if decaf_method else None,
+        'decaf_method': decaf_method_result['name'],
+        'decaf_method_id': decaf_method_result['id'],
         'rating': safe_int(data.get('rating')),
         'bean_process': data.get('bean_process'),
         'notes': data.get('notes')
     }
     
     product = factory.get_product_repository().create(product_data)
-    return jsonify(product), 201
+    enriched_product = enrich_product_with_lookups(product, factory)
+    return jsonify(enriched_product), 201
 
 
 @api.route('/products/<int:product_id>', methods=['PUT'])
@@ -1432,75 +1666,50 @@ def update_product(product_id):
     if not existing_product:
         return jsonify({'error': 'Product not found'}), 404
     
-    # Get or create related entities
-    roaster_repo = factory.get_roaster_repository()
-    bean_type_repo = factory.get_bean_type_repository()
-    country_repo = factory.get_country_repository()
-    
-    # Handle roaster (required)
-    if not data.get('roaster'):
+    # Validate required fields
+    if not data.get('roaster') and not data.get('roaster_id') and not data.get('roaster_name'):
         return jsonify({'error': 'Roaster is required'}), 400
     
-    roaster = roaster_repo.get_or_create(data['roaster'])
+    # Resolve lookup fields using new helper
+    roaster_result = resolve_lookup_field(data, 'roaster', factory.get_roaster_repository())
+    if not roaster_result['item']:
+        return jsonify({'error': 'Invalid roaster'}), 400
     
-    # Handle optional fields
-    # Bean types (now an array)
-    bean_types = []
-    bean_type_ids = []
-    if data.get('bean_type'):
-        bean_type_list = data['bean_type'] if isinstance(data['bean_type'], list) else [data['bean_type']]
-        for bt_name in bean_type_list:
-            if bt_name:
-                bt = bean_type_repo.get_or_create(bt_name)
-                bean_types.append(bt['name'])
-                bean_type_ids.append(bt['id'])
+    bean_type_result = resolve_lookup_field(data, 'bean_type', factory.get_bean_type_repository(), allow_multiple=True)
+    country_result = resolve_lookup_field(data, 'country', factory.get_country_repository())
+    region_result = resolve_lookup_field(data, 'region', factory.get_country_repository(), allow_multiple=True)
     
-    country = None
-    if data.get('country'):
-        country = country_repo.get_or_create(data['country'])
+    # Handle decaf method
+    decaf_method_result = {'item': None, 'id': None, 'name': None}
+    if data.get('decaf') and (data.get('decaf_method') or data.get('decaf_method_id')):
+        decaf_method_result = resolve_lookup_field(data, 'decaf_method', factory.get_decaf_method_repository())
     
-    # Regions (now an array)
-    regions = []
-    region_ids = []
-    if data.get('region'):
-        region_list = data['region'] if isinstance(data['region'], list) else [data['region']]
-        for r_name in region_list:
-            if r_name:
-                r = country_repo.get_or_create(r_name)
-                regions.append(r['name'])
-                region_ids.append(r['id'])
-    
-    # Handle decaf method if product is decaf
-    decaf_method = None
-    if data.get('decaf') and data.get('decaf_method'):
-        decaf_method_repo = factory.get_decaf_method_repository()
-        decaf_method = decaf_method_repo.get_or_create(data['decaf_method'])
-    
-    # Update product
+    # Update product data
     product_data = {
-        'roaster': roaster['name'],
-        'roaster_id': roaster['id'],
-        'bean_type': bean_types,
-        'bean_type_id': bean_type_ids,
-        'country': country['name'] if country else None,
-        'country_id': country['id'] if country else None,
-        'region': regions,
-        'region_id': region_ids,
+        'roaster': roaster_result['name'],
+        'roaster_id': roaster_result['id'],
+        'bean_type': bean_type_result['names'],
+        'bean_type_id': bean_type_result['ids'],
+        'country': country_result['name'],
+        'country_id': country_result['id'],
+        'region': region_result['names'],
+        'region_id': region_result['ids'],
         'product_name': data.get('product_name'),
         'roast_type': safe_int(data.get('roast_type')),
         'description': data.get('description'),
         'url': data.get('url'),
         'image_url': data.get('image_url'),
         'decaf': data.get('decaf', False),
-        'decaf_method': decaf_method['name'] if decaf_method else None,
-        'decaf_method_id': decaf_method['id'] if decaf_method else None,
+        'decaf_method': decaf_method_result['name'],
+        'decaf_method_id': decaf_method_result['id'],
         'rating': safe_int(data.get('rating')),
         'bean_process': data.get('bean_process'),
         'notes': data.get('notes')
     }
     
     product = product_repo.update(product_id, product_data)
-    return jsonify(product)
+    enriched_product = enrich_product_with_lookups(product, factory)
+    return jsonify(enriched_product)
 
 
 @api.route('/products/<int:product_id>', methods=['DELETE'])
@@ -1687,7 +1896,19 @@ def handle_batch_brew_sessions(batch_id):
             # Get product info for enrichment
             product = product_repo.find_by_id(batch.get('product_id'))
             if product:
-                session['product_name'] = f"{product.get('roaster', 'N/A')} - {product.get('bean_type', 'N/A')}"
+                # Use consistent product enrichment
+                enriched_product = enrich_product_with_lookups(product.copy(), factory)
+                
+                # Create display name from enriched data
+                roaster_name = enriched_product.get('roaster', {}).get('name', 'N/A') if enriched_product.get('roaster') else 'N/A'
+                bean_type_display = enriched_product.get('bean_type', [])
+                if isinstance(bean_type_display, list) and bean_type_display:
+                    bean_type_names = [bt.get('name', 'N/A') for bt in bean_type_display]
+                    bean_type_str = ', '.join(bean_type_names)
+                else:
+                    bean_type_str = 'N/A'
+                
+                session['product_name'] = f"{roaster_name} - {bean_type_str}"
             
             # Add brew method, recipe, grinder, filter, kettle, and scale objects
             if session.get('brew_method_id'):
@@ -1839,7 +2060,19 @@ def handle_batch_brew_sessions(batch_id):
         product_repo = factory.get_product_repository()
         product = product_repo.find_by_id(batch.get('product_id'))
         if product:
-            session['product_name'] = f"{product.get('roaster', 'N/A')} - {product.get('bean_type', 'N/A')}"
+            # Use consistent product enrichment
+            enriched_product = enrich_product_with_lookups(product.copy(), factory)
+            
+            # Create display name from enriched data
+            roaster_name = enriched_product.get('roaster', {}).get('name', 'N/A') if enriched_product.get('roaster') else 'N/A'
+            bean_type_display = enriched_product.get('bean_type', [])
+            if isinstance(bean_type_display, list) and bean_type_display:
+                bean_type_names = [bt.get('name', 'N/A') for bt in bean_type_display]
+                bean_type_str = ', '.join(bean_type_names)
+            else:
+                bean_type_str = 'N/A'
+            
+            session['product_name'] = f"{roaster_name} - {bean_type_str}"
         
         # Add brew method, recipe, grinder, filter, kettle, and scale objects
         if brew_method:
@@ -1921,14 +2154,26 @@ def get_all_brew_sessions():
         batch = batch_repo.find_by_id(session.get('product_batch_id'))
         
         if product:
-            session['product_name'] = f"{product.get('roaster', 'N/A')} - {product.get('bean_type', 'N/A')}"
+            # Use consistent product enrichment
+            enriched_product = enrich_product_with_lookups(product.copy(), factory)
+            
+            # Create display name from enriched data
+            roaster_name = enriched_product.get('roaster', {}).get('name', 'N/A') if enriched_product.get('roaster') else 'N/A'
+            bean_type_display = enriched_product.get('bean_type', [])
+            if isinstance(bean_type_display, list) and bean_type_display:
+                bean_type_names = [bt.get('name', 'N/A') for bt in bean_type_display]
+                bean_type_str = ', '.join(bean_type_names)
+            else:
+                bean_type_str = 'N/A'
+            
+            session['product_name'] = f"{roaster_name} - {bean_type_str}"
             session['product_details'] = {
-                'roaster': product.get('roaster'),
-                'bean_type': product.get('bean_type'),
-                'product_name': product.get('product_name'),
+                'roaster': enriched_product.get('roaster'),
+                'bean_type': enriched_product.get('bean_type'),
+                'product_name': enriched_product.get('product_name'),
                 'roast_date': batch.get('roast_date') if batch else None,
-                'roast_type': product.get('roast_type'),
-                'decaf': product.get('decaf', False)
+                'roast_type': enriched_product.get('roast_type'),
+                'decaf': enriched_product.get('decaf', False)
             }
         else:
             session['product_details'] = {}
@@ -2002,12 +2247,14 @@ def get_brew_session(session_id):
     batch = batch_repo.find_by_id(session['product_batch_id'])
     
     if product:
+        # Use consistent product enrichment
+        enriched_product = enrich_product_with_lookups(product.copy(), factory)
         session['product_details'] = {
-            'roaster': product.get('roaster'),
-            'bean_type': product.get('bean_type'),
+            'roaster': enriched_product.get('roaster'),
+            'bean_type': enriched_product.get('bean_type'),
             'roast_date': batch.get('roast_date') if batch else None,
-            'roast_type': product.get('roast_type'),
-            'decaf': product.get('decaf', False)
+            'roast_type': enriched_product.get('roast_type'),
+            'decaf': enriched_product.get('decaf', False)
         }
     else:
         session['product_details'] = {}

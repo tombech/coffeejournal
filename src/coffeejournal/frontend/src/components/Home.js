@@ -460,9 +460,13 @@ function Home() {
                           {item.product.product_name}
                         </h4>
                         <div style={{ fontSize: '14px', lineHeight: '1.4' }}>
-                          <div><strong>Roaster:</strong> {item.product.roaster || 'Unknown'}</div>
-                          <div><strong>Bean Type:</strong> {Array.isArray(item.product.bean_type) ? item.product.bean_type.join(', ') : (item.product.bean_type || 'Unknown')}</div>
-                          <div><strong>Country:</strong> {item.product.country || 'Unknown'}</div>
+                          <div><strong>Roaster:</strong> {item.product.roaster?.name || 'Unknown'}</div>
+                          <div><strong>Bean Type:</strong> {
+                            Array.isArray(item.product.bean_type) 
+                              ? item.product.bean_type.map(bt => bt.name).join(', ')
+                              : 'Unknown'
+                          }</div>
+                          <div><strong>Country:</strong> {item.product.country?.name || 'Unknown'}</div>
                           <div><strong>Sessions:</strong> {item.sessionCount} brews</div>
                         </div>
                       </div>
