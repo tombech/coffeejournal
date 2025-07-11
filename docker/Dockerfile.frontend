@@ -7,8 +7,8 @@ WORKDIR /app
 # Copy package files
 COPY src/coffeejournal/frontend/package*.json ./
 
-# Install dependencies
-RUN npm ci --only=production
+# Install all dependencies (including dev dependencies needed for build)
+RUN npm ci
 
 # Set API URL to use nginx proxy
 ENV REACT_APP_API_URL=/api
