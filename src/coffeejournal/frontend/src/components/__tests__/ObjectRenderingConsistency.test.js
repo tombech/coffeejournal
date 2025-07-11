@@ -11,6 +11,34 @@ import { ToastProvider } from '../Toast';
 const mockFetch = jest.fn();
 global.fetch = mockFetch;
 
+// Mock HeadlessUI dependencies for this test file
+class ResizeObserverMock {
+  constructor(callback) {
+    this.callback = callback;
+  }
+  observe = jest.fn();
+  unobserve = jest.fn();
+  disconnect = jest.fn();
+}
+
+global.ResizeObserver = ResizeObserverMock;
+
+// Mock getBoundingClientRect for HeadlessUI
+const mockBoundingClientRect = jest.fn().mockReturnValue({
+  width: 120,
+  height: 40,
+  top: 0,
+  left: 0,
+  bottom: 40,
+  right: 120,
+  x: 0,
+  y: 0,
+  toJSON: jest.fn()
+});
+
+Element.prototype.getBoundingClientRect = mockBoundingClientRect;
+HTMLElement.prototype.getBoundingClientRect = mockBoundingClientRect;
+
 const mockEnrichedProducts = [
   {
     id: 1,

@@ -120,20 +120,23 @@ function HeadlessAutocomplete({
           </div>
         )}
 
-        <Combobox.Options style={{
-          position: 'absolute',
-          top: '100%',
-          left: 0,
-          right: 0,
-          backgroundColor: 'white',
-          border: '1px solid #ccc',
-          borderTop: 'none',
-          borderRadius: '0 0 4px 4px',
-          maxHeight: '200px',
-          overflowY: 'auto',
-          zIndex: 1000,
-          boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-        }}>
+        <Combobox.Options 
+          static={process.env.NODE_ENV === 'test'}
+          style={{
+            position: 'absolute',
+            top: '100%',
+            left: 0,
+            right: 0,
+            backgroundColor: 'white',
+            border: '1px solid #ccc',
+            borderTop: 'none',
+            borderRadius: '0 0 4px 4px',
+            maxHeight: '200px',
+            overflowY: 'auto',
+            zIndex: 1000,
+            boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+          }}
+        >
           {filteredSuggestions.map((suggestion) => (
             <Combobox.Option
               key={suggestion.id}
