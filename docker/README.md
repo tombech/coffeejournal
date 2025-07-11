@@ -52,6 +52,24 @@ coffeejournal/
 
 ## Configuration
 
+### File Ownership
+
+To prevent data files from being owned by root when using Docker, update the `.env` file with your actual user and group IDs:
+
+```bash
+# Get your user and group IDs
+id -u  # Copy this number to UID in .env
+id -g  # Copy this number to GID in .env
+```
+
+Edit `docker/.env`:
+```
+UID=1000    # Replace with your user ID  
+GID=1000    # Replace with your group ID
+```
+
+This ensures files created in `docker/data/` are owned by your user instead of root.
+
 ### Environment Variables
 
 #### Backend
