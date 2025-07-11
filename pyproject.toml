@@ -12,6 +12,7 @@ dependencies = [
     "flask-cors>=4.0.0",
     "pytest>=8.4.1",
     "requests>=2.25.0",
+    "packaging>=21.0",
 ]
 
 [project.optional-dependencies]

@@ -1,0 +1,41 @@
+{
+  "schema_version": "1.0",
+  "created_date": "2025-07-11",
+  "description": "Initial schema version with 13 tables and established relationships",
+  "entities": {
+    "products": {
+      "version": "1.0",
+      "fields": ["id", "roaster_id", "bean_type_id", "country_id", "region_id", "product_name", "roast_type", "description", "url", "decaf"],
+      "foreign_keys": ["roaster_id", "bean_type_id", "country_id", "region_id"],
+      "calculated_fields": []
+    },
+    "batches": {
+      "version": "1.0", 
+      "fields": ["id", "product_id", "roast_date", "purchase_date", "amount_grams", "price", "seller", "notes"],
+      "foreign_keys": ["product_id"],
+      "calculated_fields": ["price_per_cup"]
+    },
+    "brew_sessions": {
+      "version": "1.0",
+      "fields": ["id", "timestamp", "product_batch_id", "product_id", "brew_method_id", "recipe_id", "grinder_id", "filter_id", "kettle_id", "scale_id", "amount_coffee_grams", "amount_water_grams", "brew_temperature_c", "bloom_time_seconds", "brew_time_seconds", "sweetness", "acidity", "bitterness", "body", "aroma", "flavor_profile_match", "notes"],
+      "foreign_keys": ["product_batch_id", "product_id", "brew_method_id", "recipe_id", "grinder_id", "filter_id", "kettle_id", "scale_id"],
+      "calculated_fields": ["brew_ratio"]
+    },
+    "lookups": {
+      "version": "1.0",
+      "tables": ["roasters", "bean_types", "countries", "brew_methods", "recipes", "decaf_methods", "grinders", "filters", "kettles", "scales"],
+      "standard_fields": ["id", "name"],
+      "extended_fields": {
+        "grinders": ["short_form"],
+        "scales": ["short_form"]
+      }
+    }
+  },
+  "validation_rules": {
+    "tasting_scores": "Integer range 1-10",
+    "ids": "Auto-incrementing integers starting from 1",
+    "dates": "ISO format strings (YYYY-MM-DD)",
+    "timestamps": "ISO datetime strings (YYYY-MM-DDTHH:mm:ss)",
+    "arrays": "Used for multi-valued foreign keys (bean_type_id, region_id)"
+  }
+}

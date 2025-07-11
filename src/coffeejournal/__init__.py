@@ -1,7 +1,9 @@
 from flask import Flask
 from flask_cors import CORS
 import os
+import logging
 from .repositories.factory import init_repository_factory
+from .migrations import get_migration_manager
 
 
 def create_app(test_config=None):
@@ -43,8 +45,27 @@ def create_app(test_config=None):
         data_dir=app.config['DATA_DIR']
     )
     
+    # Check and run migrations if needed
+    try:
+        migration_manager = get_migration_manager(app.config['DATA_DIR'])
+        if migration_manager.needs_migration():
+            app.logger.info("Data migration required, creating backup and running migrations...")
+            backup_dir = migration_manager.backup_data()
+            app.logger.info(f"Data backed up to: {backup_dir}")
+            
+            if migration_manager.run_migrations():
+                app.logger.info("Data migration completed successfully")
+            else:
+                app.logger.error("Data migration failed - check logs")
+        else:
+            app.logger.info("Data schema is up to date")
+    except Exception as e:
+        app.logger.error(f"Error during migration check: {str(e)}")
+    
     # Register blueprints
     from .main import api
+    from .lookups import lookups
     app.register_blueprint(api)
+    app.register_blueprint(lookups)
     
     return app
