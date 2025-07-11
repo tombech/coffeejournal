@@ -18,14 +18,5 @@
   {
     "id": 5,
     "name": "La Colombe Coffee"
-  },
-  {
-    "name": "Test Roaster",
-    "description": "Test roaster",
-    "id": 7
-  },
-  {
-    "name": "New Test Roaster",
-    "id": 8
   }
 ]

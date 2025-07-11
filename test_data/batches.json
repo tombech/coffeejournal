@@ -1,14 +1,13 @@
 [
   {
+    "id": 1,
     "product_id": 1,
     "roast_date": "2024-12-15",
     "purchase_date": "2024-12-20",
-    "amount_grams": 340,
+    "amount_grams": 340.0,
     "price": 18.5,
     "seller": "Blue Bottle Coffee Store",
-    "notes": "Fresh roast, excellent quality",
-    "rating": 4,
-    "id": 1
+    "notes": "Fresh roast, excellent quality"
   },
   {
     "id": 2,
