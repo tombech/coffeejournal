@@ -51,7 +51,12 @@ describe('BrewSessionForm Component', () => {
       })
       .mockResolvedValueOnce({
         ok: true,
-        json: async () => [{ id: 1, product_name: 'Test Coffee' }]
+        json: async () => [{ 
+          id: 1, 
+          product_name: 'Test Coffee',
+          roaster: { id: 1, name: 'Blue Bottle Coffee' },
+          bean_type: [{ id: 1, name: 'Arabica' }]
+        }]
       });
   });
 
@@ -62,7 +67,7 @@ describe('BrewSessionForm Component', () => {
     
     await waitFor(() => {
       // Check for main form elements
-      expect(screen.getByText('Record New Brew Session')).toBeInTheDocument();
+      expect(screen.getByText('Add New Brew Session')).toBeInTheDocument();
       expect(screen.getByLabelText(/Product/)).toBeInTheDocument();
       expect(screen.getByLabelText(/Brew Method/)).toBeInTheDocument();
       expect(screen.getByLabelText(/Recipe/)).toBeInTheDocument();
@@ -300,7 +305,7 @@ describe('BrewSessionForm Component', () => {
     );
     
     await waitFor(() => {
-      expect(screen.getByText('Record New Brew Session')).toBeInTheDocument();
+      expect(screen.getByText('Add New Brew Session')).toBeInTheDocument();
     });
     
     // Should pre-select the batch in the form
