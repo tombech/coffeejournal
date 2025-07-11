@@ -28,7 +28,7 @@ function LookupManager({
     { name: 'short_form', label: 'Short Form', type: 'text', required: false },
     { name: 'description', label: 'Description', type: 'textarea', required: false },
     { name: 'notes', label: 'Notes', type: 'textarea', required: false },
-    { name: 'product_url', label: 'Product URL', type: 'url', required: false },
+    { name: 'url', label: 'URL', type: 'url', required: false },
     { name: 'image_url', label: 'Image URL', type: 'url', required: false },
     { name: 'icon', label: 'Icon File', type: 'file', required: false }
   ];

@@ -1,7 +1,13 @@
 """
-Example migration from version 1.0 to 1.1.
+Migration from version 1.0 to 1.1.
 
-This is a template showing how future migrations would be implemented.
+Adds rich metadata fields to all lookup tables:
+- short_form: Short identifier for display
+- description: Detailed description
+- notes: Additional notes
+- url: Reference URL (product page, Wikipedia, etc.)
+- image_url: Image URL
+- icon: Icon filename
 """
 
 import json
@@ -10,43 +16,52 @@ from . import get_migration_manager
 
 def migrate_1_0_to_1_1(data_dir: str):
     """
-    Example migration from version 1.0 to 1.1.
+    Migration from version 1.0 to 1.1.
     
-    This is a template for future migrations. For example, if we wanted to:
-    - Add a new field to products
-    - Rename a field in brew_sessions  
-    - Add a new lookup table
+    Adds optional rich metadata fields to all lookup tables:
+    - short_form, description, notes, url, image_url, icon
+    
+    These fields are added with empty/null default values.
+    Users can populate them via the UI after migration.
     """
     
-    # Example: Add 'origin_story' field to all products
-    products_file = os.path.join(data_dir, 'products.json')
-    if os.path.exists(products_file):
-        with open(products_file, 'r') as f:
-            products = json.load(f)
-        
-        # Add new field with default value
-        for product in products:
-            if 'origin_story' not in product:
-                product['origin_story'] = ""
-        
-        with open(products_file, 'w') as f:
-            json.dump(products, f, indent=2)
+    lookup_tables = [
+        'roasters.json', 'bean_types.json', 'countries.json',
+        'brew_methods.json', 'recipes.json', 'decaf_methods.json',
+        'grinders.json', 'filters.json', 'kettles.json', 'scales.json'
+    ]
     
-    # Example: Create new lookup table for processing_methods
-    processing_methods_file = os.path.join(data_dir, 'processing_methods.json')
-    if not os.path.exists(processing_methods_file):
-        default_processing_methods = [
-            {"id": 1, "name": "Washed"},
-            {"id": 2, "name": "Natural"},
-            {"id": 3, "name": "Honey"},
-            {"id": 4, "name": "Semi-washed"}
-        ]
-        
-        with open(processing_methods_file, 'w') as f:
-            json.dump(default_processing_methods, f, indent=2)
+    new_fields = {
+        'short_form': None,
+        'description': None,
+        'notes': None,
+        'url': None,
+        'image_url': None,
+        'icon': None
+    }
     
-    print("Migration 1.0 -> 1.1 completed")
+    for table_file in lookup_tables:
+        file_path = os.path.join(data_dir, table_file)
+        if os.path.exists(file_path):
+            print(f"Migrating {table_file}...")
+            
+            with open(file_path, 'r') as f:
+                items = json.load(f)
+            
+            # Add new fields to each item if they don't exist
+            for item in items:
+                for field_name, default_value in new_fields.items():
+                    if field_name not in item:
+                        item[field_name] = default_value
+            
+            # Write back to file
+            with open(file_path, 'w') as f:
+                json.dump(items, f, indent=2)
+            
+            print(f"  Added {len(new_fields)} new fields to {len(items)} items")
+    
+    print("Migration 1.0 -> 1.1 completed successfully")
+    print("New fields added: short_form, description, notes, url, image_url, icon")
+    print("All fields are optional and can be populated via the UI")
 
-# Register the migration
-migration_manager = get_migration_manager("")  # Will be set properly when used
-migration_manager.register_migration("1.0", "1.1")(migrate_1_0_to_1_1)
+# Migration function is exported, registration happens in __init__.py

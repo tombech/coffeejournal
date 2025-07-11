@@ -128,4 +128,27 @@ def get_migration_manager(data_dir: str) -> MigrationManager:
     global migration_manager
     if migration_manager is None:
         migration_manager = MigrationManager(data_dir)
+        # Auto-load migration modules
+        _load_migration_modules(migration_manager)
     return migration_manager
+
+def _load_migration_modules(manager: MigrationManager):
+    """Load all migration modules to register their migrations."""
+    import importlib
+    import pkgutil
+    import sys
+    
+    # Import all migration modules in this package
+    current_package = __name__
+    
+    try:
+        # Load v1_0_to_v1_1 migration
+        from . import v1_0_to_v1_1
+        # The migration should auto-register when imported
+        
+        # Register the migration manually if needed
+        if "1.0->1.1" not in manager.migrations:
+            manager.migrations["1.0->1.1"] = v1_0_to_v1_1.migrate_1_0_to_1_1
+            
+    except ImportError as e:
+        logger.warning(f"Could not load migration module: {e}")

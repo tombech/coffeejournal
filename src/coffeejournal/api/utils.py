@@ -17,6 +17,21 @@ def validate_lookup_data(data, item_type="item"):
         return f"Name is required", 400
     if not data['name'] or not data['name'].strip():
         return f"Name cannot be empty", 400
+    
+    # Validate optional URL fields
+    url_fields = ['url', 'image_url']
+    for field in url_fields:
+        if field in data and data[field]:
+            url = data[field].strip()
+            if url and not (url.startswith('http://') or url.startswith('https://')):
+                return f"{field} must be a valid HTTP or HTTPS URL", 400
+    
+    # Validate short_form if provided
+    if 'short_form' in data and data['short_form']:
+        short_form = data['short_form'].strip()
+        if len(short_form) > 20:  # Reasonable limit for short form
+            return "short_form must be 20 characters or less", 400
+    
     return None, None
 
 

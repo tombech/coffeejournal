@@ -1,7 +1,7 @@
 {
-  "schema_version": "1.0",
+  "schema_version": "1.1",
   "created_date": "2025-07-11",
-  "description": "Initial schema version with 13 tables and established relationships",
+  "description": "Enhanced lookup tables with rich metadata fields (short_form, description, notes, url, image_url, icon)",
   "entities": {
     "products": {
       "version": "1.0",
@@ -22,13 +22,10 @@
       "calculated_fields": ["brew_ratio"]
     },
     "lookups": {
-      "version": "1.0",
+      "version": "1.1",
       "tables": ["roasters", "bean_types", "countries", "brew_methods", "recipes", "decaf_methods", "grinders", "filters", "kettles", "scales"],
-      "standard_fields": ["id", "name"],
-      "extended_fields": {
-        "grinders": ["short_form"],
-        "scales": ["short_form"]
-      }
+      "standard_fields": ["id", "name", "short_form", "description", "notes", "url", "image_url", "icon"],
+      "note": "All fields except id and name are optional but supported by all lookup tables"
     }
   },
   "validation_rules": {
