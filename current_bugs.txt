@@ -1,0 +1,5 @@
+Bug list:
+
+1) When adding a brew session, sometimes the backend adds duplicates for filters, methods, grinders etc. This seems to mostly be happening on the tablet for some reason. We should never add a new item with the same name as an existing one.
+2) When deleting the duplicate items from 1) the "Replace with other item and delete" options doesn't seem to work. It will just remove the reference and then delete the item.
+3) I'm unable to edit a brew session to change the product and batch, that gives me a 404 error

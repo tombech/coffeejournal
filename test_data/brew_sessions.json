@@ -8,7 +8,7 @@
     "recipe_id": 1,
     "amount_coffee_grams": 20.0,
     "amount_water_grams": 320.0,
-    "brew_temperature_c": 93.0,
+    "brew_temperature_c": 93.5,
     "bloom_time_seconds": 30,
     "brew_time_seconds": 180,
     "sweetness": 8,
