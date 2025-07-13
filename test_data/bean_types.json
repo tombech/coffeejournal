@@ -1,18 +1,30 @@
 [
   {
     "id": 1,
-    "name": "Arabica"
+    "name": "Arabica",
+    "is_default": false,
+    "created_at": "2025-07-13T17:09:14.365744+00:00",
+    "updated_at": "2025-07-13T17:09:14.365744+00:00"
   },
   {
     "id": 2,
-    "name": "Robusta"
+    "name": "Robusta",
+    "is_default": false,
+    "created_at": "2025-07-13T17:09:14.365744+00:00",
+    "updated_at": "2025-07-13T17:09:14.365744+00:00"
   },
   {
     "id": 3,
-    "name": "Liberica"
+    "name": "Liberica",
+    "is_default": false,
+    "created_at": "2025-07-13T17:09:14.365744+00:00",
+    "updated_at": "2025-07-13T17:09:14.365744+00:00"
   },
   {
     "id": 4,
-    "name": "Excelsa"
+    "name": "Excelsa",
+    "is_default": false,
+    "created_at": "2025-07-13T17:09:14.365744+00:00",
+    "updated_at": "2025-07-13T17:09:14.365744+00:00"
   }
 ]

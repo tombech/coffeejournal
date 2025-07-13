@@ -1,0 +1,28 @@
+Current wish-list
+
+1) I would like to make the other edit forms a bit more compact, they use a lot of vertical space right now.
+2) The fields such as "Brewing Instructions" actually need more vertical space, not less.
+3) The product details page also needs a bit of a iteration, perhaps we could move the "spider web graph" up to the
+   right and the image of the product (if given) to the left and a bit larger? I'm looking to improve the estetics a bit.
+4) The header should be left aligned
+5) Could the item names/short names in the table listings be clickable so I can click and go directly to the display
+   page for the item? (do we have display pages for items? if not I think we should).
+
+Quality of life improvements to minimize the amount of choices I have to make when registering a new brew session:
+6) Add a "default selection" or "favourite" flag to items. This flag should only be possible to set on one type of item at a time, so it
+   should possibly be a separate setting structure for items. I.e. if I have more than one kettle, I will most often
+   have a favourite one that I usually use - ditto for grinders, scales and so on.
+7) When editing or adding a brew session I would like the item lists to either pick the "favourite"/"default selection" item
+   by default, or if none has this flag, the item that is most frequently used. For items with only one value, that should
+   always be picked by default.
+8) We need to add a "depeleted_or_inactive" flag (or something similar) to a product batch, to indicate that there is no more beans
+   to consume from that batch (or that the batch is "unselectable" for whatever reason, for example a bad batch).
+9) For product batches, if there are more than one batch that does not have a "depleted_or_inactive" (or similar) flag then the one
+   with the oldest roast date should be selected by default (people will usually consume the oldest batch first).
+
+General features:
+10) I think we should add some common metadata to all repositories; created and modified timestamps, these will be useful later.
+
+Fun features:
+* Add a stat to the product batch card that sums the "coffee amount" from all the brew sessions that uses it, something like "xyz of 250g used (x brews, approx x brews left)"
+* Add a running counter for grinders how many grams (or kilos if > 1000g) of coffee it has ground so far. It could be useful when priming a new grinder, they usually need a bit of seasoning before they are optimal. Add a "manually_ground_amount" field (int, grams) that is added this calculated field (for people that prefer to season grinders with beans they don't actually brew with).

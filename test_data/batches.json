@@ -7,7 +7,10 @@
     "amount_grams": 340.0,
     "price": 18.5,
     "seller": "Blue Bottle Coffee Store",
-    "notes": "Fresh roast, excellent quality"
+    "notes": "Fresh roast, excellent quality",
+    "is_active": true,
+    "created_at": "2025-07-13T17:09:14.365744+00:00",
+    "updated_at": "2025-07-13T17:09:14.365744+00:00"
   },
   {
     "id": 2,
@@ -17,7 +20,10 @@
     "amount_grams": 454.0,
     "price": 22.0,
     "seller": "Intelligentsia Online",
-    "notes": "Holiday special blend"
+    "notes": "Holiday special blend",
+    "is_active": true,
+    "created_at": "2025-07-13T17:09:14.365744+00:00",
+    "updated_at": "2025-07-13T17:09:14.365744+00:00"
   },
   {
     "id": 3,
@@ -27,7 +33,10 @@
     "amount_grams": 340.0,
     "price": 19.75,
     "seller": "Local Coffee Shop",
-    "notes": "Christmas gift"
+    "notes": "Christmas gift",
+    "is_active": true,
+    "created_at": "2025-07-13T17:09:14.365744+00:00",
+    "updated_at": "2025-07-13T17:09:14.365744+00:00"
   },
   {
     "id": 4,
@@ -37,7 +46,10 @@
     "amount_grams": 250.0,
     "price": 16.0,
     "seller": "Counter Culture Direct",
-    "notes": "Limited edition batch"
+    "notes": "Limited edition batch",
+    "is_active": true,
+    "created_at": "2025-07-13T17:09:14.365744+00:00",
+    "updated_at": "2025-07-13T17:09:14.365744+00:00"
   },
   {
     "id": 5,
@@ -47,7 +59,10 @@
     "amount_grams": 340.0,
     "price": 18.5,
     "seller": "Blue Bottle Coffee Store",
-    "notes": "New year restock"
+    "notes": "New year restock",
+    "is_active": true,
+    "created_at": "2025-07-13T17:09:14.365744+00:00",
+    "updated_at": "2025-07-13T17:09:14.365744+00:00"
   },
   {
     "id": 6,
@@ -57,6 +72,121 @@
     "amount_grams": 454.0,
     "price": 24.0,
     "seller": "La Colombe Cafe",
-    "notes": "Dark roast for espresso"
+    "notes": "Dark roast for espresso",
+    "is_active": true,
+    "created_at": "2025-07-13T17:09:14.365744+00:00",
+    "updated_at": "2025-07-13T17:09:14.365744+00:00"
+  },
+  {
+    "product_id": 6,
+    "roast_date": "2025-01-01",
+    "purchase_date": null,
+    "amount_grams": null,
+    "price": null,
+    "seller": null,
+    "notes": null,
+    "rating": null,
+    "id": 7,
+    "is_active": true,
+    "created_at": "2025-07-13T17:09:14.365744+00:00",
+    "updated_at": "2025-07-13T17:09:14.365744+00:00"
+  },
+  {
+    "product_id": 7,
+    "roast_date": "2025-01-02",
+    "purchase_date": null,
+    "amount_grams": null,
+    "price": null,
+    "seller": null,
+    "notes": null,
+    "rating": null,
+    "id": 8,
+    "is_active": true,
+    "created_at": "2025-07-13T17:09:14.365744+00:00",
+    "updated_at": "2025-07-13T17:09:14.365744+00:00"
+  },
+  {
+    "product_id": 8,
+    "roast_date": "2025-01-01",
+    "purchase_date": null,
+    "amount_grams": null,
+    "price": null,
+    "seller": null,
+    "notes": null,
+    "rating": null,
+    "id": 9,
+    "is_active": true,
+    "created_at": "2025-07-13T17:09:14.365744+00:00",
+    "updated_at": "2025-07-13T17:09:14.365744+00:00"
+  },
+  {
+    "product_id": 9,
+    "roast_date": "2025-01-01",
+    "purchase_date": null,
+    "amount_grams": null,
+    "price": null,
+    "seller": null,
+    "notes": null,
+    "rating": null,
+    "id": 10,
+    "is_active": true,
+    "created_at": "2025-07-13T17:09:14.365744+00:00",
+    "updated_at": "2025-07-13T17:09:14.365744+00:00"
+  },
+  {
+    "product_id": 10,
+    "roast_date": "2025-01-02",
+    "purchase_date": null,
+    "amount_grams": null,
+    "price": null,
+    "seller": null,
+    "notes": null,
+    "rating": null,
+    "id": 11,
+    "is_active": true,
+    "created_at": "2025-07-13T17:09:14.365744+00:00",
+    "updated_at": "2025-07-13T17:09:14.365744+00:00"
+  },
+  {
+    "product_id": 11,
+    "roast_date": "2025-01-01",
+    "purchase_date": null,
+    "amount_grams": null,
+    "price": null,
+    "seller": null,
+    "notes": null,
+    "rating": null,
+    "id": 12,
+    "is_active": true,
+    "created_at": "2025-07-13T17:09:14.365744+00:00",
+    "updated_at": "2025-07-13T17:09:14.365744+00:00"
+  },
+  {
+    "product_id": 12,
+    "roast_date": "2025-01-01",
+    "purchase_date": null,
+    "amount_grams": null,
+    "price": null,
+    "seller": null,
+    "notes": null,
+    "rating": null,
+    "id": 13,
+    "is_active": true,
+    "created_at": "2025-07-13T17:09:14.365744+00:00",
+    "updated_at": "2025-07-13T17:09:14.365744+00:00"
+  },
+  {
+    "product_id": 13,
+    "roast_date": "2025-01-15",
+    "purchase_date": null,
+    "amount_grams": null,
+    "price": null,
+    "seller": null,
+    "notes": null,
+    "rating": null,
+    "id": 14,
+    "is_active": true,
+    "created_at": "2025-07-13T17:09:14.365744+00:00",
+    "updated_at": "2025-07-13T17:09:14.365744+00:00"
   }
 ]

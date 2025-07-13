@@ -1,14 +1,41 @@
 [
   {
     "name": "Gooseneck Kettle",
-    "id": 1
+    "id": 1,
+    "short_form": null,
+    "description": null,
+    "notes": null,
+    "url": null,
+    "image_url": null,
+    "icon": null,
+    "is_default": false,
+    "created_at": "2025-07-13T17:09:14.365744+00:00",
+    "updated_at": "2025-07-13T17:09:14.365744+00:00"
   },
   {
     "name": "Fellow Stagg EKG",
-    "id": 2
+    "id": 2,
+    "short_form": null,
+    "description": null,
+    "notes": null,
+    "url": null,
+    "image_url": null,
+    "icon": null,
+    "is_default": false,
+    "created_at": "2025-07-13T17:09:14.365744+00:00",
+    "updated_at": "2025-07-13T17:09:14.365744+00:00"
   },
   {
     "name": "Bonavita Electric Kettle",
-    "id": 3
+    "id": 3,
+    "short_form": null,
+    "description": null,
+    "notes": null,
+    "url": null,
+    "image_url": null,
+    "icon": null,
+    "is_default": false,
+    "created_at": "2025-07-13T17:09:14.365744+00:00",
+    "updated_at": "2025-07-13T17:09:14.365744+00:00"
   }
 ]

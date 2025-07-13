@@ -55,6 +55,86 @@ def get_batch(batch_id):
     return jsonify(batch)
 
 
+@batches_bp.route('/batches/<int:batch_id>/detail', methods=['GET'])
+def get_batch_detail(batch_id):
+    """Get detailed information about a batch including statistics."""
+    factory = get_repository_factory()
+    batch_repo = factory.get_batch_repository()
+    product_repo = factory.get_product_repository()
+    session_repo = factory.get_brew_session_repository()
+    
+    batch = batch_repo.find_by_id(batch_id)
+    if not batch:
+        return jsonify({'error': 'Batch not found'}), 404
+    
+    # Get product information
+    product = product_repo.find_by_id(batch['product_id'])
+    enriched_product = enrich_product_with_lookups(product, factory) if product else None
+    
+    # Get all brew sessions for this batch
+    sessions = session_repo.find_by_batch(batch_id)
+    
+    # Calculate statistics
+    stats = {
+        'total_brew_sessions': len(sessions),
+        'total_coffee_used': sum(s.get('amount_coffee_grams', 0) for s in sessions),
+        'total_water_used': sum(s.get('amount_water_grams', 0) for s in sessions),
+        'coffee_remaining': max(0, batch.get('amount_grams', 0) - sum(s.get('amount_coffee_grams', 0) for s in sessions)),
+        'sessions_remaining_estimate': 0,
+        'avg_rating': None,
+        'rating_breakdown': {
+            'overall': [],
+            'aroma': [],
+            'acidity': [],
+            'body': [],
+            'flavor': [],
+            'aftertaste': []
+        }
+    }
+    
+    # Calculate sessions remaining estimate
+    if sessions and stats['coffee_remaining'] > 0:
+        avg_coffee_per_session = stats['total_coffee_used'] / len(sessions)
+        if avg_coffee_per_session > 0:
+            stats['sessions_remaining_estimate'] = int(stats['coffee_remaining'] / avg_coffee_per_session)
+    
+    # Calculate rating statistics
+    for session in sessions:
+        for rating_type in stats['rating_breakdown'].keys():
+            value = session.get(f'rating_{rating_type}')
+            if value and isinstance(value, (int, float)):
+                stats['rating_breakdown'][rating_type].append(value)
+    
+    # Calculate averages
+    for rating_type, values in stats['rating_breakdown'].items():
+        if values:
+            stats['rating_breakdown'][rating_type] = {
+                'avg': round(sum(values) / len(values), 1),
+                'count': len(values),
+                'min': min(values),
+                'max': max(values)
+            }
+        else:
+            stats['rating_breakdown'][rating_type] = None
+    
+    # Overall average
+    overall_ratings = [s.get('rating_overall') for s in sessions if s.get('rating_overall')]
+    if overall_ratings:
+        stats['avg_rating'] = round(sum(overall_ratings) / len(overall_ratings), 1)
+    
+    # Calculate price per cup
+    price_per_cup = calculate_price_per_cup(batch, stats['total_brew_sessions'])
+    
+    return jsonify({
+        'batch': batch,
+        'product': enriched_product,
+        'statistics': stats,
+        'price_per_cup': price_per_cup,
+        'recent_sessions': sessions[-10:] if sessions else [],  # Last 10 sessions
+        'all_sessions': len(sessions)  # Count of all sessions
+    })
+
+
 @batches_bp.route('/batches/<int:batch_id>', methods=['PUT'])
 def update_batch(batch_id):
     """Update a batch."""
@@ -82,7 +162,8 @@ def update_batch(batch_id):
         'price': safe_float(data.get('price')),
         'seller': data.get('seller'),
         'notes': data.get('notes'),
-        'rating': safe_int(data.get('rating'))
+        'rating': safe_int(data.get('rating')),
+        'is_active': data.get('is_active', existing_batch.get('is_active', True))  # Preserve existing or default to True
     }
     
     batch = batch_repo.update(batch_id, batch_data)
@@ -551,6 +632,75 @@ def get_brew_session(session_id):
         session['scale'] = None
     
     return jsonify(session)
+
+
+@batches_bp.route('/brew_sessions/<int:session_id>/detail', methods=['GET'])
+def get_brew_session_detail(session_id):
+    """Get detailed information about a brew session including related data."""
+    factory = get_repository_factory()
+    session_repo = factory.get_brew_session_repository()
+    batch_repo = factory.get_batch_repository()
+    product_repo = factory.get_product_repository()
+    
+    session = session_repo.find_by_id(session_id)
+    if not session:
+        return jsonify({'error': 'Brew session not found'}), 404
+    
+    # Enrich session with lookup data
+    enriched_session = enrich_brew_session_with_lookups(session, factory)
+    
+    # Get related batch and product info
+    batch = batch_repo.find_by_id(session['product_batch_id']) if session.get('product_batch_id') else None
+    product = product_repo.find_by_id(session['product_id']) if session.get('product_id') else None
+    enriched_product = enrich_product_with_lookups(product, factory) if product else None
+    
+    # Calculate brew ratio if possible
+    brew_ratio = None
+    if session.get('amount_coffee_grams') and session.get('amount_water_grams'):
+        brew_ratio = calculate_brew_ratio(session['amount_coffee_grams'], session['amount_water_grams'])
+    
+    # Calculate extraction details
+    extraction_details = {
+        'brew_ratio': brew_ratio,
+        'coffee_to_water_ratio': f"1:{round(session.get('amount_water_grams', 0) / session.get('amount_coffee_grams', 1), 1)}" if session.get('amount_coffee_grams') else None,
+        'extraction_time_formatted': None,
+        'water_temp_celsius': session.get('water_temperature'),
+        'water_temp_fahrenheit': round((session.get('water_temperature', 0) * 9/5) + 32, 1) if session.get('water_temperature') else None
+    }
+    
+    # Format extraction time
+    if session.get('extraction_time_minutes'):
+        total_seconds = int(session['extraction_time_minutes'] * 60)
+        minutes = total_seconds // 60
+        seconds = total_seconds % 60
+        extraction_details['extraction_time_formatted'] = f"{minutes}:{seconds:02d}"
+    
+    # Compile all rating information
+    ratings = {
+        'overall': session.get('rating_overall'),
+        'aroma': session.get('rating_aroma'),
+        'acidity': session.get('rating_acidity'),
+        'body': session.get('rating_body'),
+        'flavor': session.get('rating_flavor'),
+        'aftertaste': session.get('rating_aftertaste'),
+        'has_ratings': any(session.get(f'rating_{r}') for r in ['overall', 'aroma', 'acidity', 'body', 'flavor', 'aftertaste'])
+    }
+    
+    # Get other sessions from same batch for comparison
+    other_sessions = []
+    if batch:
+        all_batch_sessions = session_repo.find_by_batch(batch['id'])
+        other_sessions = [s for s in all_batch_sessions if s['id'] != session_id][-5:]  # Last 5 other sessions
+    
+    return jsonify({
+        'session': enriched_session,
+        'batch': batch,
+        'product': enriched_product,
+        'extraction_details': extraction_details,
+        'ratings': ratings,
+        'related_sessions': other_sessions,
+        'batch_session_count': len(other_sessions) + 1  # Including current session
+    })
 
 
 @batches_bp.route('/brew_sessions/<int:session_id>', methods=['PUT'])

@@ -149,6 +149,11 @@ def _load_migration_modules(manager: MigrationManager):
         # Register the migration manually if needed
         if "1.0->1.1" not in manager.migrations:
             manager.migrations["1.0->1.1"] = v1_0_to_v1_1.migrate_1_0_to_1_1
+        
+        # Load v1_1_to_v1_2 migration
+        from . import v1_1_to_v1_2
+        if "1.1->1.2" not in manager.migrations:
+            manager.migrations["1.1->1.2"] = v1_1_to_v1_2.migrate_1_1_to_1_2
             
     except ImportError as e:
         logger.warning(f"Could not load migration module: {e}")

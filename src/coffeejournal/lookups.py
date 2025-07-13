@@ -49,6 +49,58 @@ def get_roaster(roaster_id):
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+@lookups.route('/roasters/<int:roaster_id>/detail', methods=['GET'])
+def get_roaster_detail(roaster_id):
+    """Get detailed information about a roaster including usage statistics."""
+    try:
+        factory = get_repository_factory()
+        roaster_repo = factory.get_roaster_repository()
+        product_repo = factory.get_product_repository()
+        batch_repo = factory.get_batch_repository()
+        session_repo = factory.get_brew_session_repository()
+        
+        roaster = roaster_repo.find_by_id(roaster_id)
+        if not roaster:
+            return jsonify({'error': 'Roaster not found'}), 404
+        
+        # Get products for this roaster
+        products = [p for p in product_repo.find_all() if p.get('roaster_id') == roaster_id]
+        
+        # Get batches for these products
+        product_ids = [p['id'] for p in products]
+        all_batches = batch_repo.find_all()
+        batches = [b for b in all_batches if b.get('product_id') in product_ids]
+        
+        # Get brew sessions for these batches  
+        batch_ids = [b['id'] for b in batches]
+        all_sessions = session_repo.find_all()
+        sessions = [s for s in all_sessions if s.get('product_batch_id') in batch_ids]
+        
+        # Calculate statistics
+        stats = {
+            'total_products': len(products),
+            'total_batches': len(batches),
+            'total_brew_sessions': len(sessions),
+            'total_coffee_amount': sum(b.get('amount_grams', 0) for b in batches),
+            'active_batches': len([b for b in batches if b.get('is_active', True)]),
+            'total_spent': sum(b.get('price', 0) for b in batches if b.get('price')),
+            'avg_rating': None
+        }
+        
+        # Calculate average rating from sessions with ratings
+        rated_sessions = [s for s in sessions if s.get('rating_overall')]
+        if rated_sessions:
+            stats['avg_rating'] = round(sum(s['rating_overall'] for s in rated_sessions) / len(rated_sessions), 1)
+        
+        return jsonify({
+            'roaster': roaster,
+            'statistics': stats,
+            'recent_products': products[-5:] if products else [],  # Last 5 products
+            'recent_sessions': sessions[-10:] if sessions else []   # Last 10 sessions
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 @lookups.route('/roasters', methods=['POST'])
 def create_roaster():
     """Create a new roaster."""
@@ -59,7 +111,24 @@ def create_roaster():
             return jsonify({'error': error_msg}), status_code
         
         factory = get_repository_factory()
-        roaster = factory.get_roaster_repository().create(data)
+        repo = factory.get_roaster_repository()
+        
+        # Handle is_default flag
+        is_default = data.get('is_default', False)
+        if is_default:
+            # If setting as default, clear the flag from data before creating
+            # We'll set it properly after creation
+            data_copy = data.copy()
+            data_copy.pop('is_default', None)
+            roaster = repo.create(data_copy)
+            # Now set as default (this will clear any existing default)
+            roaster = repo.set_default(roaster['id'])
+        else:
+            # Ensure is_default field is present in data (defaults to False)
+            if 'is_default' not in data:
+                data['is_default'] = False
+            roaster = repo.create(data)
+        
         return jsonify(roaster), 201
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -73,9 +142,31 @@ def update_roaster(roaster_id):
             return jsonify({'error': 'No data provided'}), 400
         
         factory = get_repository_factory()
-        roaster = factory.get_roaster_repository().update(roaster_id, data)
-        if not roaster:
-            return jsonify({'error': 'Roaster not found'}), 404
+        repo = factory.get_roaster_repository()
+        
+        # Handle is_default flag
+        is_default = data.get('is_default')
+        if is_default is not None:
+            # Remove is_default from data for normal update
+            data_copy = data.copy()
+            data_copy.pop('is_default', None)
+            
+            # Update other fields first
+            roaster = repo.update(roaster_id, data_copy)
+            if not roaster:
+                return jsonify({'error': 'Roaster not found'}), 404
+            
+            # Handle default setting
+            if is_default:
+                roaster = repo.set_default(roaster_id)
+            else:
+                roaster = repo.clear_default(roaster_id)
+        else:
+            # Normal update without default handling
+            roaster = repo.update(roaster_id, data)
+            if not roaster:
+                return jsonify({'error': 'Roaster not found'}), 404
+        
         return jsonify(roaster)
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -89,6 +180,56 @@ def delete_roaster(roaster_id):
         if not success:
             return jsonify({'error': 'Roaster not found'}), 404
         return '', 204
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@lookups.route('/roasters/default', methods=['GET'])
+def get_default_roaster():
+    """Get the default roaster."""
+    try:
+        factory = get_repository_factory()
+        default_roaster = factory.get_roaster_repository().find_default()
+        if not default_roaster:
+            return jsonify({'error': 'No default roaster set'}), 404
+        return jsonify(default_roaster)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@lookups.route('/roasters/smart_default', methods=['GET'])
+def get_smart_default_roaster():
+    """Get the smart default roaster based on usage patterns."""
+    try:
+        factory = get_repository_factory()
+        smart_default = factory.get_roaster_repository().get_smart_default()
+        if not smart_default:
+            return jsonify({'error': 'No roasters available'}), 404
+        return jsonify(smart_default)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@lookups.route('/roasters/<int:roaster_id>/set_default', methods=['POST'])
+def set_default_roaster(roaster_id):
+    """Set a roaster as the default."""
+    try:
+        factory = get_repository_factory()
+        repo = factory.get_roaster_repository()
+        roaster = repo.set_default(roaster_id)
+        return jsonify(roaster)
+    except ValueError as e:
+        return jsonify({'error': str(e)}), 404
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@lookups.route('/roasters/<int:roaster_id>/clear_default', methods=['POST'])
+def clear_default_roaster(roaster_id):
+    """Clear the default flag from a roaster."""
+    try:
+        factory = get_repository_factory()
+        repo = factory.get_roaster_repository()
+        roaster = repo.clear_default(roaster_id)
+        return jsonify(roaster)
+    except ValueError as e:
+        return jsonify({'error': str(e)}), 404
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
@@ -850,7 +991,27 @@ def create_grinder():
         if error_msg:
             return jsonify({'error': error_msg}), status_code
         factory = get_repository_factory()
-        grinder = factory.get_grinder_repository().create(data)
+        repo = factory.get_grinder_repository()
+        
+        # Handle is_default flag
+        is_default = data.get('is_default', False)
+        if is_default:
+            # If setting as default, clear the flag from data before creating
+            # We'll set it properly after creation
+            data_copy = data.copy()
+            data_copy.pop('is_default', None)
+            grinder = repo.create(data_copy)
+            # Now set as default (this will clear any existing default)
+            grinder = repo.set_default(grinder['id'])
+        else:
+            # Ensure is_default field is present in data (defaults to False)
+            if 'is_default' not in data:
+                data['is_default'] = False
+            # Ensure manually_ground_grams field is present (defaults to 0)
+            if 'manually_ground_grams' not in data:
+                data['manually_ground_grams'] = 0
+            grinder = repo.create(data)
+        
         return jsonify(grinder), 201
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -863,9 +1024,31 @@ def update_grinder(grinder_id):
         if not data:
             return jsonify({'error': 'No data provided'}), 400
         factory = get_repository_factory()
-        grinder = factory.get_grinder_repository().update(grinder_id, data)
-        if not grinder:
-            return jsonify({'error': 'Grinder not found'}), 404
+        repo = factory.get_grinder_repository()
+        
+        # Handle is_default flag
+        is_default = data.get('is_default')
+        if is_default is not None:
+            # Remove is_default from data for normal update
+            data_copy = data.copy()
+            data_copy.pop('is_default', None)
+            
+            # Update other fields first
+            grinder = repo.update(grinder_id, data_copy)
+            if not grinder:
+                return jsonify({'error': 'Grinder not found'}), 404
+            
+            # Handle default setting
+            if is_default:
+                grinder = repo.set_default(grinder_id)
+            else:
+                grinder = repo.clear_default(grinder_id)
+        else:
+            # Normal update without default handling
+            grinder = repo.update(grinder_id, data)
+            if not grinder:
+                return jsonify({'error': 'Grinder not found'}), 404
+        
         return jsonify(grinder)
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -881,6 +1064,72 @@ def delete_grinder(grinder_id):
         return '', 204
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+@lookups.route('/grinders/default', methods=['GET'])
+def get_default_grinder():
+    """Get the default grinder."""
+    try:
+        factory = get_repository_factory()
+        default_grinder = factory.get_grinder_repository().find_default()
+        if not default_grinder:
+            return jsonify({'error': 'No default grinder set'}), 404
+        return jsonify(default_grinder)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@lookups.route('/grinders/smart_default', methods=['GET'])
+def get_smart_default_grinder():
+    """Get the smart default grinder based on usage patterns."""
+    try:
+        factory = get_repository_factory()
+        smart_default = factory.get_grinder_repository().get_smart_default()
+        if not smart_default:
+            return jsonify({'error': 'No grinders available'}), 404
+        return jsonify(smart_default)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@lookups.route('/grinders/<int:grinder_id>/set_default', methods=['POST'])
+def set_default_grinder(grinder_id):
+    """Set a grinder as the default."""
+    try:
+        factory = get_repository_factory()
+        repo = factory.get_grinder_repository()
+        grinder = repo.set_default(grinder_id)
+        return jsonify(grinder)
+    except ValueError as e:
+        return jsonify({'error': str(e)}), 404
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@lookups.route('/grinders/<int:grinder_id>/clear_default', methods=['POST'])
+def clear_default_grinder(grinder_id):
+    """Clear the default flag from a grinder."""
+    try:
+        factory = get_repository_factory()
+        repo = factory.get_grinder_repository()
+        grinder = repo.clear_default(grinder_id)
+        return jsonify(grinder)
+    except ValueError as e:
+        return jsonify({'error': str(e)}), 404
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@lookups.route('/grinders/<int:grinder_id>/stats', methods=['GET'])
+def get_grinder_stats(grinder_id):
+    """Get usage statistics for a grinder."""
+    try:
+        factory = get_repository_factory()
+        repo = factory.get_grinder_repository()
+        grinder = repo.find_by_id(grinder_id)
+        if not grinder:
+            return jsonify({'error': 'Grinder not found'}), 404
+        
+        stats = repo.get_usage_stats(grinder_id)
+        return jsonify(stats)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 
 @lookups.route('/grinders/<int:grinder_id>/usage', methods=['GET'])
 def check_grinder_usage(grinder_id):

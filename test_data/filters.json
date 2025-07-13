@@ -1,18 +1,54 @@
 [
   {
     "name": "Paper Filter",
-    "id": 1
+    "id": 1,
+    "short_form": null,
+    "description": null,
+    "notes": null,
+    "url": null,
+    "image_url": null,
+    "icon": null,
+    "is_default": false,
+    "created_at": "2025-07-13T17:09:14.365744+00:00",
+    "updated_at": "2025-07-13T17:09:14.365744+00:00"
   },
   {
     "name": "Metal Filter",
-    "id": 2
+    "id": 2,
+    "short_form": null,
+    "description": null,
+    "notes": null,
+    "url": null,
+    "image_url": null,
+    "icon": null,
+    "is_default": false,
+    "created_at": "2025-07-13T17:09:14.365744+00:00",
+    "updated_at": "2025-07-13T17:09:14.365744+00:00"
   },
   {
     "name": "Hario V60 Paper Filter",
-    "id": 3
+    "id": 3,
+    "short_form": null,
+    "description": null,
+    "notes": null,
+    "url": null,
+    "image_url": null,
+    "icon": null,
+    "is_default": false,
+    "created_at": "2025-07-13T17:09:14.365744+00:00",
+    "updated_at": "2025-07-13T17:09:14.365744+00:00"
   },
   {
     "name": "Cafec T90",
-    "id": 5
+    "id": 5,
+    "short_form": null,
+    "description": null,
+    "notes": null,
+    "url": null,
+    "image_url": null,
+    "icon": null,
+    "is_default": false,
+    "created_at": "2025-07-13T17:09:14.365744+00:00",
+    "updated_at": "2025-07-13T17:09:14.365744+00:00"
   }
 ]

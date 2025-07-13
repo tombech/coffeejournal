@@ -1,22 +1,65 @@
 [
   {
     "id": 1,
-    "name": "Blue Bottle Coffee"
+    "name": "Blue Bottle Coffee",
+    "is_default": false,
+    "created_at": "2025-07-13T17:09:14.365744+00:00",
+    "updated_at": "2025-07-13T17:09:14.365744+00:00"
   },
   {
     "id": 2,
-    "name": "Intelligentsia Coffee"
+    "name": "Intelligentsia Coffee",
+    "is_default": false,
+    "created_at": "2025-07-13T17:09:14.365744+00:00",
+    "updated_at": "2025-07-13T17:09:14.365744+00:00"
   },
   {
     "id": 3,
-    "name": "Stumptown Coffee Roasters"
+    "name": "Stumptown Coffee Roasters",
+    "is_default": false,
+    "created_at": "2025-07-13T17:09:14.365744+00:00",
+    "updated_at": "2025-07-13T17:09:14.365744+00:00"
   },
   {
     "id": 4,
-    "name": "Counter Culture Coffee"
+    "name": "Counter Culture Coffee",
+    "is_default": false,
+    "created_at": "2025-07-13T17:09:14.365744+00:00",
+    "updated_at": "2025-07-13T17:09:14.365744+00:00"
   },
   {
     "id": 5,
-    "name": "La Colombe Coffee"
+    "name": "La Colombe Coffee",
+    "is_default": false,
+    "created_at": "2025-07-13T17:09:14.365744+00:00",
+    "updated_at": "2025-07-13T17:09:14.365744+00:00"
+  },
+  {
+    "name": "Test Roaster 1",
+    "id": 6,
+    "is_default": false,
+    "created_at": "2025-07-13T17:09:14.365744+00:00",
+    "updated_at": "2025-07-13T17:09:14.365744+00:00"
+  },
+  {
+    "name": "Test Roaster 2",
+    "id": 7,
+    "is_default": false,
+    "created_at": "2025-07-13T17:09:14.365744+00:00",
+    "updated_at": "2025-07-13T17:09:14.365744+00:00"
+  },
+  {
+    "name": "Test Roaster",
+    "id": 8,
+    "is_default": false,
+    "created_at": "2025-07-13T17:09:14.365744+00:00",
+    "updated_at": "2025-07-13T17:09:14.365744+00:00"
+  },
+  {
+    "name": "Test Coffee Co",
+    "id": 9,
+    "is_default": false,
+    "created_at": "2025-07-13T17:09:14.365744+00:00",
+    "updated_at": "2025-07-13T17:09:14.365744+00:00"
   }
 ]

@@ -257,7 +257,8 @@ def handle_product_batches(product_id):
             'price': safe_float(data.get('price')),
             'seller': data.get('seller'),
             'notes': data.get('notes'),
-            'rating': safe_int(data.get('rating'))
+            'rating': safe_int(data.get('rating')),
+            'is_active': data.get('is_active', True)  # Default to active
         }
         
         batch_repo = factory.get_batch_repository()

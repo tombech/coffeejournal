@@ -1,42 +1,72 @@
 [
   {
     "id": 1,
-    "name": "Ethiopia"
+    "name": "Ethiopia",
+    "is_default": false,
+    "created_at": "2025-07-13T17:09:14.365744+00:00",
+    "updated_at": "2025-07-13T17:09:14.365744+00:00"
   },
   {
     "id": 2,
-    "name": "Colombia"
+    "name": "Colombia",
+    "is_default": false,
+    "created_at": "2025-07-13T17:09:14.365744+00:00",
+    "updated_at": "2025-07-13T17:09:14.365744+00:00"
   },
   {
     "id": 3,
-    "name": "Brazil"
+    "name": "Brazil",
+    "is_default": false,
+    "created_at": "2025-07-13T17:09:14.365744+00:00",
+    "updated_at": "2025-07-13T17:09:14.365744+00:00"
   },
   {
     "id": 4,
-    "name": "Guatemala"
+    "name": "Guatemala",
+    "is_default": false,
+    "created_at": "2025-07-13T17:09:14.365744+00:00",
+    "updated_at": "2025-07-13T17:09:14.365744+00:00"
   },
   {
     "id": 5,
-    "name": "Kenya"
+    "name": "Kenya",
+    "is_default": false,
+    "created_at": "2025-07-13T17:09:14.365744+00:00",
+    "updated_at": "2025-07-13T17:09:14.365744+00:00"
   },
   {
     "id": 6,
-    "name": "Jamaica"
+    "name": "Jamaica",
+    "is_default": false,
+    "created_at": "2025-07-13T17:09:14.365744+00:00",
+    "updated_at": "2025-07-13T17:09:14.365744+00:00"
   },
   {
     "id": 7,
-    "name": "Hawaii"
+    "name": "Hawaii",
+    "is_default": false,
+    "created_at": "2025-07-13T17:09:14.365744+00:00",
+    "updated_at": "2025-07-13T17:09:14.365744+00:00"
   },
   {
     "id": 8,
-    "name": "Costa Rica"
+    "name": "Costa Rica",
+    "is_default": false,
+    "created_at": "2025-07-13T17:09:14.365744+00:00",
+    "updated_at": "2025-07-13T17:09:14.365744+00:00"
   },
   {
     "id": 9,
-    "name": "Peru"
+    "name": "Peru",
+    "is_default": false,
+    "created_at": "2025-07-13T17:09:14.365744+00:00",
+    "updated_at": "2025-07-13T17:09:14.365744+00:00"
   },
   {
     "id": 10,
-    "name": "Indonesia"
+    "name": "Indonesia",
+    "is_default": false,
+    "created_at": "2025-07-13T17:09:14.365744+00:00",
+    "updated_at": "2025-07-13T17:09:14.365744+00:00"
   }
 ]

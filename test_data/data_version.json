@@ -1,0 +1,7 @@
+{
+  "version": "1.2",
+  "migrated_date": "2025-07-11",
+  "description": "Added audit timestamps, batch active flags, grinder tracking, and default/favorite lookup system",
+  "schema_version": "1.2",
+  "migration_date": "2025-07-13T17:27:53.261444+00:00"
+}

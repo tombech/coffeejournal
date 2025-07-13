@@ -74,6 +74,7 @@ source = { editable = "." }
 dependencies = [
     { name = "flask" },
     { name = "flask-cors" },
+    { name = "packaging" },
     { name = "pytest" },
     { name = "requests" },
 ]
@@ -88,6 +89,7 @@ test = [
 requires-dist = [
     { name = "flask", specifier = ">=2.3.0,<3.0" },
     { name = "flask-cors", specifier = ">=4.0.0" },
+    { name = "packaging", specifier = ">=21.0" },
     { name = "pytest", specifier = ">=8.4.1" },
     { name = "pytest", marker = "extra == 'test'", specifier = ">=7.0.0" },
     { name = "pytest-cov", marker = "extra == 'test'", specifier = ">=4.0.0" },

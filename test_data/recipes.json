@@ -1,22 +1,37 @@
 [
   {
     "id": 1,
-    "name": "Standard V60"
+    "name": "Standard V60",
+    "is_default": false,
+    "created_at": "2025-07-13T17:09:14.365744+00:00",
+    "updated_at": "2025-07-13T17:09:14.365744+00:00"
   },
   {
     "id": 2,
-    "name": "Tetsu Kasuya 4:6 Method"
+    "name": "Tetsu Kasuya 4:6 Method",
+    "is_default": false,
+    "created_at": "2025-07-13T17:09:14.365744+00:00",
+    "updated_at": "2025-07-13T17:09:14.365744+00:00"
   },
   {
     "id": 3,
-    "name": "Classic French Press"
+    "name": "Classic French Press",
+    "is_default": false,
+    "created_at": "2025-07-13T17:09:14.365744+00:00",
+    "updated_at": "2025-07-13T17:09:14.365744+00:00"
   },
   {
     "id": 4,
-    "name": "Inverted AeroPress"
+    "name": "Inverted AeroPress",
+    "is_default": false,
+    "created_at": "2025-07-13T17:09:14.365744+00:00",
+    "updated_at": "2025-07-13T17:09:14.365744+00:00"
   },
   {
     "id": 5,
-    "name": "Chemex Classic"
+    "name": "Chemex Classic",
+    "is_default": false,
+    "created_at": "2025-07-13T17:09:14.365744+00:00",
+    "updated_at": "2025-07-13T17:09:14.365744+00:00"
   }
 ]
