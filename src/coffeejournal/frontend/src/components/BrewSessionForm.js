@@ -158,8 +158,8 @@ function BrewSessionForm({ product_batch_id = null, onSessionSubmitted, initialD
     setLoading(true);
     setError(null);
 
-    // Validate that batch is selected
-    if (!formData.product_batch_id && !isEditMode) {
+    // Validate that batch is selected (both for new sessions and edit mode)
+    if (!formData.product_batch_id) {
       setError('Please select a batch');
       setLoading(false);
       return;

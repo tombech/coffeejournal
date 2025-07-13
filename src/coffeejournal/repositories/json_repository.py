@@ -97,10 +97,13 @@ class JSONLookupRepository(JSONRepositoryBase, LookupRepository):
     """JSON repository for lookup tables."""
     
     def find_by_name(self, name: str) -> Optional[Dict[str, Any]]:
-        """Find entity by name."""
+        """Find entity by name (case-insensitive, whitespace-trimmed)."""
+        if not name:
+            return None
+        normalized_name = name.strip().lower()
         data = self._read_data()
         for item in data:
-            if item.get('name') == name:
+            if item.get('name') and item['name'].strip().lower() == normalized_name:
                 return item
         return None
     

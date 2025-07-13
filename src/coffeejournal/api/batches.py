@@ -566,8 +566,23 @@ def update_brew_session(session_id):
         return jsonify({'error': 'Brew session not found'}), 404
     
     # Validate product and batch if changing them
-    product_batch_id = data.get('product_batch_id', existing_session['product_batch_id'])
-    product_id = data.get('product_id', existing_session['product_id'])
+    # Convert string IDs to integers (frontend sends strings from form inputs)
+    # For valid strings (like "123"), convert to int. For invalid values (empty string, None), 
+    # let the subsequent lookup fail with 404 as expected by tests
+    raw_batch_id = data.get('product_batch_id', existing_session['product_batch_id'])
+    raw_product_id = data.get('product_id', existing_session['product_id'])
+    
+    # Only convert valid string representations to integers
+    # Invalid values (None, empty string) will be passed through and cause 404 in lookup
+    if isinstance(raw_batch_id, str) and raw_batch_id.strip() and raw_batch_id.isdigit():
+        product_batch_id = int(raw_batch_id)
+    else:
+        product_batch_id = raw_batch_id
+        
+    if isinstance(raw_product_id, str) and raw_product_id.strip() and raw_product_id.isdigit():
+        product_id = int(raw_product_id)
+    else:
+        product_id = raw_product_id
     
     product = factory.get_product_repository().find_by_id(product_id)
     if not product:
@@ -576,6 +591,10 @@ def update_brew_session(session_id):
     batch = factory.get_batch_repository().find_by_id(product_batch_id)
     if not batch:
         return jsonify({'error': 'Batch not found'}), 404
+    
+    # Validate that the batch belongs to the specified product
+    if batch['product_id'] != product_id:
+        return jsonify({'error': 'Batch does not belong to the specified product'}), 400
     
     # Get or create brew method, recipe, grinder, filter, kettle, and scale
     brew_method_repo = factory.get_brew_method_repository()
