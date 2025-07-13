@@ -25,7 +25,7 @@ body {
   padding: 10px 20px;
   border-radius: 8px;
   margin-bottom: 10px;
-  text-align: center;
+  text-align: left;
   min-width: fit-content;
 }
 
@@ -39,7 +39,7 @@ body {
   padding: 0;
   margin: 0;
   display: flex;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 20px;
 }
 

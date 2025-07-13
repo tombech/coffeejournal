@@ -508,7 +508,11 @@ function ProductDetail() {
                 backgroundColor: '#fafafa' 
               }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-                  <h4 style={{ margin: 0 }}>Batch #{batch.id}</h4>
+                  <h4 style={{ margin: 0 }}>
+                    <Link to={`/batches/${batch.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+                      Batch #{batch.id}
+                    </Link>
+                  </h4>
                   <div>
                     <button 
                       onClick={() => handleEditBatch(batch)}

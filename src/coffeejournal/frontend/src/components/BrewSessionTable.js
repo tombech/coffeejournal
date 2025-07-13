@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import { API_BASE_URL } from '../config';
 
 function BrewSessionTable({ sessions, onDelete, onDuplicate, onEdit, onRefresh, showNewForm, setShowNewForm, setEditingSession, showActions = true, showFilters = true, showAddButton = true, showProduct = true, title = null, preserveOrder = false, initialSort = 'timestamp', initialSortDirection = 'desc' }) {
@@ -418,7 +419,6 @@ function BrewSessionTable({ sessions, onDelete, onDuplicate, onEdit, onRefresh, 
                     padding: '4px', 
                     border: '1px solid #ddd', 
                     fontSize: '12px', 
-                    cursor: 'help',
                     whiteSpace: 'nowrap',
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
@@ -427,24 +427,44 @@ function BrewSessionTable({ sessions, onDelete, onDuplicate, onEdit, onRefresh, 
                   }}
                   title={`${session.product_details?.product_name || 'Unknown'}\n\nBean Type: ${Array.isArray(session.product_details?.bean_type) ? session.product_details?.bean_type.map(bt => bt.name).join(', ') : 'Unknown'}\nRoaster: ${session.product_details?.roaster?.name || 'Unknown'}\nRoast Date: ${session.product_details?.roast_date ? formatDateNorwegian(session.product_details?.roast_date) : 'Unknown'}${isDecafProduct(session) ? '\n\n⚠️ DECAF PRODUCT' : ''}`}
                 >
-                  {session.product_details?.product_name || '-'}
+                  {session.product_id ? (
+                    <Link to={`/products/${session.product_id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+                      {session.product_details?.product_name || '-'}
+                    </Link>
+                  ) : (
+                    session.product_details?.product_name || '-'
+                  )}
                   {isDecafProduct(session) && <span style={{ marginLeft: '4px', color: '#ff6b35' }} title="Decaf Product">D</span>}
                 </td>
                 )}
                 <td 
-                  style={{ padding: '4px', border: '1px solid #ddd', fontSize: '12px', cursor: 'help', verticalAlign: 'top' }}
+                  style={{ padding: '4px', border: '1px solid #ddd', fontSize: '12px', verticalAlign: 'top' }}
                   title={`Full date/time: ${formatDateTime(session.timestamp)}`}
                 >
-                  {formatDateNorwegian(session.timestamp)}
+                  <Link to={`/brew-sessions/${session.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+                    {formatDateNorwegian(session.timestamp)}
+                  </Link>
                 </td>
                 <td style={{ padding: '4px', border: '1px solid #ddd', fontSize: '12px', verticalAlign: 'top', whiteSpace: 'nowrap' }} title={session.brew_method?.name || ''}>
-                  {session.brew_method ? getShortName(session.brew_method.name, session.brew_method.short_form) : '-'}
+                  {session.brew_method ? (
+                    <Link to={`/brew-methods/${session.brew_method.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+                      {getShortName(session.brew_method.name, session.brew_method.short_form)}
+                    </Link>
+                  ) : '-'}
                 </td>
                 <td style={{ padding: '4px', border: '1px solid #ddd', fontSize: '12px', verticalAlign: 'top', whiteSpace: 'nowrap' }} title={session.recipe?.name || ''}>
-                  {session.recipe ? getShortName(session.recipe.name, session.recipe.short_form) : '-'}
+                  {session.recipe ? (
+                    <Link to={`/recipes/${session.recipe.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+                      {getShortName(session.recipe.name, session.recipe.short_form)}
+                    </Link>
+                  ) : '-'}
                 </td>
                 <td style={{ padding: '4px', border: '1px solid #ddd', fontSize: '12px', verticalAlign: 'top', whiteSpace: 'nowrap' }} title={session.filter?.name || ''}>
-                  {session.filter ? getShortName(session.filter.name, session.filter.short_form) : '-'}
+                  {session.filter ? (
+                    <Link to={`/filters/${session.filter.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+                      {getShortName(session.filter.name, session.filter.short_form)}
+                    </Link>
+                  ) : '-'}
                 </td>
                 <td style={{ padding: '4px', border: '1px solid #ddd', fontSize: '12px', textAlign: 'center', verticalAlign: 'top', whiteSpace: 'nowrap' }}>
                   {session.amount_coffee_grams ? `${session.amount_coffee_grams}g` : '-'}
@@ -468,7 +488,11 @@ function BrewSessionTable({ sessions, onDelete, onDuplicate, onEdit, onRefresh, 
                 <td style={{ padding: '4px', border: '1px solid #ddd', fontSize: '12px', textAlign: 'center', verticalAlign: 'top', whiteSpace: 'nowrap' }}>{session.body || '-'}</td>
                 <td style={{ padding: '4px', border: '1px solid #ddd', fontSize: '12px', textAlign: 'center', verticalAlign: 'top', whiteSpace: 'nowrap' }}>{session.aroma || '-'}</td>
                 <td style={{ padding: '4px', border: '1px solid #ddd', fontSize: '12px', verticalAlign: 'top', whiteSpace: 'nowrap' }} title={session.grinder?.name || ''}>
-                  {session.grinder ? getShortName(session.grinder.name, session.grinder.short_form) : '-'}
+                  {session.grinder ? (
+                    <Link to={`/grinders/${session.grinder.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+                      {getShortName(session.grinder.name, session.grinder.short_form)}
+                    </Link>
+                  ) : '-'}
                 </td>
                 <td style={{ padding: '4px', border: '1px solid #ddd', fontSize: '12px', verticalAlign: 'top', whiteSpace: 'nowrap' }}>{session.grinder_setting || '-'}</td>
                 <td style={{ padding: '4px', border: '1px solid #ddd', fontSize: '12px', textAlign: 'center', verticalAlign: 'top', whiteSpace: 'nowrap', fontWeight: 'bold' }}>
